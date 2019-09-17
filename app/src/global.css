@@ -1,0 +1,46 @@
+/*
+ * Global constants goes here
+ */
+:root {
+    --primary-color: #42b983;
+}
+
+
+/*
+ * Global CSS goes here, it requires to use :global before each style
+ */
+:global html {
+    height: 100%;
+}
+:global body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    margin: auto;
+}
+:global #app {
+    color: #4b6279;
+    font-family: Source Sans Pro, Helvetica, sans-serif;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+}
+:global #app p {
+    text-align: justify;
+}
+:global .hello {
+    color: var(--primary-color);
+}
+
+:global .main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+:global .main.header {
+    display: flex;
+    flex-direction: row;
+}
