@@ -5,6 +5,9 @@ import React, {
     useState,
 } from 'react'
 
+import { Provider } from 'react-redux'
+import { store } from './Store'
+
 import Logo from './components/Logo/'
 import MainPage from './components/MainPage/'
 
@@ -22,11 +25,13 @@ export default function App() {
     })
 
     return (
-        <div className="main">
-            <div className="header">
-                {logosRender}
+        <Provider store={store}>
+            <div className="main">
+                <div className="header">
+                    {logosRender}
+                </div>
+                <MainPage />
             </div>
-            <MainPage />
-        </div>
+        </Provider>
     )
 }

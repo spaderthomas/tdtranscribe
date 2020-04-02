@@ -4,11 +4,15 @@ import React, {
     useState,
 } from 'react'
 
+import { useDispatch } from "react-redux"
+import { addRegion } from '../../actions/Actions'
+
 import { WaveSurfer } from './wavesurfer'
 
 import Kovo from '../../assets/kovo.wav'
 
 import styles from './styles.css'
+import { stat } from 'fs'
 
 
 export default function Waveform() {
@@ -17,13 +21,14 @@ export default function Waveform() {
     let [regions, setRegions] = useState({})
     let [activeRegion, setActiveRegion] = useState({})
     let waveformDivRef = useRef()
+    const dispatch = useDispatch()
 
     function isEmpty(obj) {
-        for(var prop in obj) {
-            if(obj.hasOwnProperty(prop))
+        for (var prop in obj) {
+            if (obj.hasOwnProperty(prop))
                 return false;
         }
-    
+
         return true;
     }
 
@@ -34,15 +39,6 @@ export default function Waveform() {
     let clearWavesurferRegions = wavesurfer => {
         for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
             region.remove()
-        }
-    }
-
-    let addRegion = region => {
-        console.log(activeRegion);
-        if (isEmpty(activeRegion)) {
-            regions[region.id] = region
-        } else {
-            activeRegion.children[region.id] = region
         }
     }
 
@@ -70,19 +66,28 @@ export default function Waveform() {
 
     let addRegionAddedListener = wavesurfer => {
         wavesurfer.on('region-created', region => {
+            console.log('Region was created.')
+
             region.drag = false
             region.children = {}
 
             region.on('click', () => {
+                console.log('addRegionAddedListener')
+
                 clearWavesurferRegions(wavesurfer)
-                wavesurfer.addRegion(region)
+                //wavesurfer.addRegion(region)
 
                 setActiveRegion(old => {
                     return region
                 })
             })
 
-            addRegion(region)
+            dispatch(addRegion(region))
+            if (isEmpty(activeRegion)) {
+                regions[region.id] = region
+            } else {
+                activeRegion.children[region.id] = region
+            }
 
             let regionExists = false
             for (let [id, child] in Object.entries(regions)) {
