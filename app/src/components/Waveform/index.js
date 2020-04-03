@@ -4,7 +4,7 @@ import React, {
     useState,
 } from 'react'
 
-import { useDispatch } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { addRegion } from '../../actions/Actions'
 
 import { WaveSurfer } from './wavesurfer'
@@ -12,25 +12,17 @@ import { WaveSurfer } from './wavesurfer'
 import Kovo from '../../assets/kovo.wav'
 
 import styles from './styles.css'
-import { stat } from 'fs'
 
 
 export default function Waveform() {
     let [wavesurfer, setWavesurfer] = useState()
     let [zoom, setZoom] = useState(50)
-    let [regions, setRegions] = useState({})
-    let [activeRegion, setActiveRegion] = useState({})
     let waveformDivRef = useRef()
     const dispatch = useDispatch()
+    const regions = useSelector(state => state.regions)
+    console.log(regions)
 
-    function isEmpty(obj) {
-        for (var prop in obj) {
-            if (obj.hasOwnProperty(prop))
-                return false;
-        }
 
-        return true;
-    }
 
     let floatProgressToSeconds = (totalDuration, progressAsFloat) => {
         return progressAsFloat * totalDuration
@@ -65,49 +57,6 @@ export default function Waveform() {
     }
 
     let addRegionAddedListener = wavesurfer => {
-        wavesurfer.on('region-created', region => {
-            console.log('Region was created.')
-
-            region.drag = false
-            region.children = {}
-
-            region.on('click', () => {
-                console.log('addRegionAddedListener')
-
-                clearWavesurferRegions(wavesurfer)
-                //wavesurfer.addRegion(region)
-
-                setActiveRegion(old => {
-                    return region
-                })
-            })
-
-            dispatch(addRegion(region))
-            if (isEmpty(activeRegion)) {
-                regions[region.id] = region
-            } else {
-                activeRegion.children[region.id] = region
-            }
-
-            let regionExists = false
-            for (let [id, child] in Object.entries(regions)) {
-                if (id === region.id) {
-                    regionExists = true
-                    break
-                }
-            }
-            if (!regionExists) {
-                setRegions(regions => {
-                    let newRegions = {
-                        ...regions,
-                        [region.id]: region
-                    }
-
-                    return newRegions
-                })
-            }
-
-        })
     }
 
     // Initialization
@@ -118,7 +67,43 @@ export default function Waveform() {
         })
         addKeyListeners(MyCoolVariableWavesurfer)
         addScrollListener()
-        addRegionAddedListener(MyCoolVariableWavesurfer)
+        MyCoolVariableWavesurfer.on('region-created', region => {
+            console.log('Region was created.')
+
+            region.drag = false
+            region.children = {}
+
+            region.on('click', () => {
+                clearWavesurferRegions(wavesurfer)
+                //wavesurfer.addRegion(region)
+
+            })
+
+            dispatch(addRegion(region))
+
+            let regionExists = false
+            for (const region of regions) {
+                console.log('hello')
+            }
+
+            // for (let [id, child] in Object.entries(regions)) {
+            //     if (id === region.id) {
+            //         regionExists = true
+            //         break
+            //     }
+            // }
+            // if (!regionExists) {
+            //     setRegions(regions => {
+            //         let newRegions = {
+            //             ...regions,
+            //             [region.id]: region
+            //         }
+
+            //         return newRegions
+            //     })
+            // }
+
+        })
         loadTest(MyCoolVariableWavesurfer)
         MyCoolVariableWavesurfer.enableDragSelection({})
 
@@ -128,10 +113,6 @@ export default function Waveform() {
     useEffect(() => {
         wavesurfer && wavesurfer.zoom(zoom)
     }, [zoom])
-
-    useEffect(() => {
-        console.log(regions);
-    }, [regions])
 
     return (
         <div ref={waveformDivRef} className={styles.waveform} />
