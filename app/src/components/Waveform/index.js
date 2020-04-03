@@ -15,23 +15,32 @@ import styles from './styles.css'
 
 
 export default function Waveform() {
-    let [wavesurfer, setWavesurfer] = useState()
     let [zoom, setZoom] = useState(50)
     let waveformDivRef = useRef()
+
     const dispatch = useDispatch()
     const regions = useSelector(state => state.regions)
-    console.log(regions)
-
-
 
     let floatProgressToSeconds = (totalDuration, progressAsFloat) => {
         return progressAsFloat * totalDuration
     }
 
-    let clearWavesurferRegions = wavesurfer => {
-        for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
-            region.remove()
-        }
+    let [wavesurfer, setWavesurfer] = useState(null)
+    console.log("wavesurfer is: ")
+    console.log(wavesurfer)
+
+    let variable = "valid!"
+    let reference = {
+        dog: true,
+        saucer: true
+    }
+    let clearWavesurferRegions = () => {
+        console.log(wavesurfer)
+        console.log(variable)
+        console.log(reference)
+        // for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
+        //     region.remove()
+        // }
     }
 
     let addKeyListeners = wavesurfer => {
@@ -61,30 +70,38 @@ export default function Waveform() {
 
     // Initialization
     useEffect(() => {
-        let MyCoolVariableWavesurfer = WaveSurfer.create({
+        setWavesurfer(WaveSurfer.create({
             container: waveformDivRef.current,
             waveColor: 'blue',
-        })
-        addKeyListeners(MyCoolVariableWavesurfer)
+        }))
+    }, [])
+
+    useEffect(() => {
+        if (!wavesurfer) return
+
+        addKeyListeners(wavesurfer)
+
         addScrollListener()
-        MyCoolVariableWavesurfer.on('region-created', region => {
+
+        loadTest(wavesurfer)
+        wavesurfer.enableDragSelection({})
+
+        wavesurfer.on('region-created', region => {
             console.log('Region was created.')
 
             region.drag = false
-            region.children = {}
+            region.children = [{
+                start: 10,
+                end: 12,
+                children: []
+            }]
 
             region.on('click', () => {
-                clearWavesurferRegions(wavesurfer)
-                //wavesurfer.addRegion(region)
-
+                console.log(wavesurfer)
+                clearWavesurferRegions()
             })
 
             dispatch(addRegion(region))
-
-            let regionExists = false
-            for (const region of regions) {
-                console.log('hello')
-            }
 
             // for (let [id, child] in Object.entries(regions)) {
             //     if (id === region.id) {
@@ -104,11 +121,7 @@ export default function Waveform() {
             // }
 
         })
-        loadTest(MyCoolVariableWavesurfer)
-        MyCoolVariableWavesurfer.enableDragSelection({})
-
-        setWavesurfer(MyCoolVariableWavesurfer)
-    }, [])
+    }, [wavesurfer])
 
     useEffect(() => {
         wavesurfer && wavesurfer.zoom(zoom)

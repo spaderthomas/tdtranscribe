@@ -8,26 +8,47 @@ import { makeStyles } from '@material-ui/core/styles'
 
 import styles from './styles.css'
 
+import { useState } from 'react'
+import { useSelector } from "react-redux"
+
+const getUniqueNodeId = (() => {
+    let id = 0;
+
+    return () => {
+        let next = id++;
+        return next.toString()
+    }
+})()
+
+const RegionViewerItem = (props) => {
+    let children = []
+    for (let child of props.region.children) {
+        children.push(<RegionViewerItem region={child}></RegionViewerItem>)
+    }   
+
+    let timeString = props.region.start.toFixed() + ", " + props.region.end.toFixed()
+    return (
+        <TreeItem nodeId={getUniqueNodeId()} label={timeString}>
+            {children}
+        </TreeItem>
+    )
+}
 export default function RegionViewer() {
+    let regions = useSelector(state => state.regions)
+    let tree = useState()
+
+    let items = []
+    for (let i = 0; i < regions.length; i++) {
+        let region = regions[i]
+        items.push(<RegionViewerItem region={region}></RegionViewerItem>)
+    }
     return (
         <TreeView
             className={styles.root}
             defaultCollapseIcon={<ExpandMoreIcon />}
             defaultExpandIcon={<ChevronRightIcon />}
         >
-            <TreeItem nodeId="1" label="Applications">
-                <TreeItem nodeId="2" label="Calendar" />
-                <TreeItem nodeId="3" label="Chrome" />
-                <TreeItem nodeId="4" label="Webstorm" />
-            </TreeItem>
-            <TreeItem nodeId="5" label="Documents">
-                <TreeItem nodeId="6" label="Material-UI">
-                    <TreeItem nodeId="7" label="src">
-                        <TreeItem nodeId="8" label="index.js" />
-                        <TreeItem nodeId="9" label="tree-view.js" />
-                    </TreeItem>
-                </TreeItem>
-            </TreeItem>
+            {items}
         </TreeView>
     )
 }
