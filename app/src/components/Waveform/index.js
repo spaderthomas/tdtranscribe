@@ -6,15 +6,15 @@ import React, {
 } from 'react'
 
 import { useDispatch, useSelector } from "react-redux"
-import { addRegion, setSelectedRegion } from '../../actions/Actions'
+import { addRegion, setSelectedRegion, addToChildren, addRootRegion, updateRegion } from '../../actions/Actions'
+
+import { back } from '../../Utils'
 
 import { WaveSurfer } from './wavesurfer'
 
 import Kovo from '../../assets/kovo.wav'
 
 import styles from './styles.css'
-
-
 
 export default function Waveform() {
     let [zoom, setZoom] = useState(50)
@@ -24,37 +24,27 @@ export default function Waveform() {
     let waveformDivRef = useRef()
     const dispatch = useDispatch()
     const selectedRegion = useSelector(state => state.selectedRegion)
+    const regions = useSelector(state => state.regions)
 
     useEffect(() => {
         if (!selectedRegion) return
+
         let seconds = selectedRegion.end - selectedRegion.start
-        console.log(selectedRegion)
         let center = (selectedRegion.end + selectedRegion.start) / 2
         let floatCenter = center / wavesurfer.getDuration()
 
-        wavesurfer.seekTo(floatCenter) 
+        wavesurfer.seekTo(floatCenter)
         setZoom(width / seconds)
         clearWavesurferRegions()
     }, [selectedRegion])
 
-    useLayoutEffect(() => {
-        if (waveformDivRef.current) {
-          setWidth(waveformDivRef.current.offsetWidth);
-        }
-      }, []);
-
-    let clearWavesurferRegions = () => {
-        for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
-            region.remove()
-        }
-    }
-
     let onRegionCreated = region => {
-        console.log('Region was created.')
+        console.log('Region was created: ', region.id)
 
         region.drag = false
         region.children = []
 
+        region.on('update', event => dispatch(updateRegion(region.id, region.start,region.end)))
         region.on('click', event => dispatch(setSelectedRegion(region)))
         dispatch(addRegion(region))
     }
@@ -78,7 +68,14 @@ export default function Waveform() {
         })
     }
 
-    let setupWavesurfer = () => {
+    useEffect(() => {
+        setWavesurfer(WaveSurfer.create({
+            container: waveformDivRef.current,
+            waveColor: 'blue'
+        }))
+    }, [])
+
+    useEffect(() => {
         if (!wavesurfer) return
 
         addKeyListeners()
@@ -87,24 +84,22 @@ export default function Waveform() {
 
         wavesurfer.enableDragSelection({})
 
-        wavesurfer.on('seek', progress => {
+        wavesurfer.on('play', progress => {
             wavesurfer.drawer.recenter(progress)
         })
-
         wavesurfer.on('region-created', onRegionCreated)
-    }
+    }, [wavesurfer])
 
-    useEffect(() => {
-        setWavesurfer(WaveSurfer.create({
-            container: waveformDivRef.current,
-            waveColor: 'blue'
-        }))
-    }, [])
+    useLayoutEffect(() => {
+        if (waveformDivRef.current) {
+            setWidth(waveformDivRef.current.offsetWidth);
+        }
+    }, []);
 
-    if (!initialized && wavesurfer) {
-        console.log('calling the dumb callback')
-        setupWavesurfer()
-        setInitialized(true)
+    let clearWavesurferRegions = () => {
+        for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
+            region.remove()
+        }
     }
 
     useEffect(() => {
@@ -115,17 +110,3 @@ export default function Waveform() {
         <div ref={waveformDivRef} className={styles.waveform} />
     )
 }
-
-const MyComponent = (props) => {
-    [something, setSomething] = useSelector() // Will receive whatever's in the Redux store
-
-    console.log(something) // Prints the new value from the redux store
-    let callback = () => {
-        console.log(something) // ALWAYS PRINTS THE INITIAL VALUE DEAR GOD WHY
-    }
-
-    some_shit.on('click', callback)
-}
-
-// ... elsewhere
-

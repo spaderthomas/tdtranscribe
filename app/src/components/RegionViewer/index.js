@@ -24,7 +24,7 @@ const getUniqueNodeId = (() => {
 const RegionViewerItem = (props) => {
     let children = []
     for (let child of props.region.children) {
-        children.push()
+        children.push(<RegionViewerItem region={child} key={getUniqueNodeId()}></RegionViewerItem>)
     }
 
     let timeString = props.region.start.toFixed() + ", " + props.region.end.toFixed()
@@ -36,13 +36,14 @@ const RegionViewerItem = (props) => {
 }
 export default function RegionViewer() {
     let regions = useSelector(state => state.regions)
-    let tree = useState()
 
     let items = []
-    for (let i = 0; i < regions.length; i++) {
-        let region = regions[i]
-        items.push(<RegionViewerItem region={region}></RegionViewerItem>)
+    for (let region of regions) {
+        if (region.root) {
+            items.push(<RegionViewerItem region={region} key={getUniqueNodeId()}></RegionViewerItem>)
+        }
     }
+
     return (
         <TreeView
             className={styles.root}
