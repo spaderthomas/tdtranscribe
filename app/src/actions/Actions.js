@@ -13,10 +13,10 @@ export const addRegion = (region) => {
     }
 }
 
-export const setSelectedRegion = (region) => {
+export const setSelectedRegion = (id) => {
     return {
         type: SET_SELECTED_REGION,
-        region: region
+        id: id
     }
 }
 

@@ -1,4 +1,4 @@
-import { 
+import {
     ADD_REGION,
     SET_SELECTED_REGION,
     ADD_CHILD,
@@ -21,29 +21,37 @@ export const rootReducer = (state = initialState, action) => {
             action.region.isVisible = true
             action.region.drag = false
             action.region.color = randomRGBA()
-    
+
             if (state.selectedRegion) {
                 action.region.root = false
                 state.selectedRegion.children.push(action.region)
             } else {
                 action.region.root = true
             }
-    
+
             return {
                 ...state,
                 regions: pureArrayPush(state.regions, action.region)
             }
-        case SET_SELECTED_REGION: 
+        case SET_SELECTED_REGION: {
             let regions = [...state.regions]
-            for (let region of regions) {
-                region.isVisible = false
+            let selected = findRegion(regions, action.id)
+            if (selected) {
+                for (let region of regions) {
+                    region.isVisible = false
+                }
+
+                for (let region of selected.children) {
+                    region.isVisible = true
+                }
             }
 
             return {
                 ...state,
                 regions: regions,
-                selectedRegion: action.region,
+                selectedRegion: selected
             }
+    }
         case ADD_CHILD:
             action.parent.children.push(action.child)
 
@@ -56,13 +64,13 @@ export const rootReducer = (state = initialState, action) => {
             let region = findRegion(regions, action.id)
 
             let snappedStart, snappedEnd = false
-            for (let other of state.regions) { 
-                if (Math.abs(other.start - region.end) < snapEpsilon ) {
+            for (let other of state.regions) {
+                if (Math.abs(other.start - region.end) < snapEpsilon) {
                     console.log('snapped!')
                     region.end = other.start
                     snappedEnd = true
                 }
-                if (Math.abs(region.start - other.end) < snapEpsilon ) {
+                if (Math.abs(region.start - other.end) < snapEpsilon) {
                     region.start = other.end
                     snappedStart = true
                 }
@@ -89,12 +97,13 @@ export const rootReducer = (state = initialState, action) => {
         case SHOW_ROOT_REGIONS: {
             let regions = [...state.regions]
             for (let region of regions) {
-                region.isVisible = true
+                region.isVisible = region.root
             }
 
             return {
                 ...state,
-                regions: regions
+                regions: regions,
+                selectedRegion: null
             }
 
         }

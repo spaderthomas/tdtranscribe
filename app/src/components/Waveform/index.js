@@ -32,18 +32,36 @@ export default function Waveform() {
     const selectedRegion = useSelector(state => state.selectedRegion)
     const regions = useSelector(state => state.regions)
 
+    let onRegionClick = region => {
+        dispatch(setSelectedRegion(region.id))
+    }
+
+    let onRegionMove = region => {
+        dispatch(moveRegion(region.id, region.start, region.end))
+    }
+
+    let setRegionCallbacks = region => {
+        region.on('update', event => onRegionMove(region))
+        region.on('click', event => onRegionClick(region))
+    }
+
+    let onRegionCreated = region => {
+        setRegionCallbacks(region)
+        dispatch(addRegion(region))
+    }
+
     useEffect(() => {
         if (!wavesurfer) return
 
         for (let region of regions) {
             if (!region.isVisible) {
-                console.log('removing region from ws: ', region.id)
-                region.remove()
+                let wsRegion = wavesurfer.regions.list[region.id]
+                wsRegion.remove() // This is a noop if it's not in WS
             }
             if (region.isVisible && !(region.id in wavesurfer.regions.list)) {
                 region.suppressFire = true
-                console.log('add to ws: ', region.id)
-                wavesurfer.regions.add(region)
+                let wsRegion = wavesurfer.regions.add(region)
+                setRegionCallbacks(wsRegion)
             }
         }
 
@@ -70,17 +88,7 @@ export default function Waveform() {
         wavesurfer.zoom(zoom)
     }, [zoom])
 
-    let onRegionCreated = region => {
-        console.log('on region created: ', region.id)
-        region.on('update', event => {
-            dispatch(moveRegion(region.id, region.start, region.end))
-        })
-        region.on('click', event => {
-            console.log('nephew click handler')
-            dispatch(setSelectedRegion(region))
-        })
-        dispatch(addRegion(region))
-    }
+
 
     // utilities
     let addKeyListeners = () => {
@@ -90,8 +98,6 @@ export default function Waveform() {
                     wavesurfer.play(0, wavesurfer.getDuration())
                 case 'p':
                     wavesurfer.playPause()
-                case '':
-                    console.log('gi')
             }
         })
     }
@@ -102,6 +108,7 @@ export default function Waveform() {
             setZoom(zoom => Math.max(zoom - scaled, 0))
 
             dispatch(showRootRegions())
+            dispatch(setSelectedRegion(-1))
         })
     }
 
