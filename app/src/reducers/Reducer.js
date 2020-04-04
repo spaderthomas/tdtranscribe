@@ -58,8 +58,6 @@ export const rootReducer = (state = initialState, action) => {
 
             if (!snappedStart) region.start = action.start
             if (!snappedEnd) region.end = action.end
-
-            region.updateRender()
             
             return {
                 ...state,

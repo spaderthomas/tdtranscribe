@@ -8,7 +8,7 @@ import React, {
 import { useDispatch, useSelector } from "react-redux"
 import { addRegion, setSelectedRegion, addToChildren, addRootRegion, updateRegion } from '../../actions/Actions'
 
-import { back } from '../../Utils'
+import { randomInt, randomRGBA } from '../../Utils'
 
 import { WaveSurfer } from './wavesurfer'
 
@@ -17,14 +17,20 @@ import Kovo from '../../assets/kovo.wav'
 import styles from './styles.css'
 
 export default function Waveform() {
-    let [zoom, setZoom] = useState(50)
+    const [zoom, setZoom] = useState(0)
     const [width, setWidth] = useState(width);
     const [initialized, setInitialized] = useState(false)
-    let [wavesurfer, setWavesurfer] = useState()
-    let waveformDivRef = useRef()
+    const [wavesurfer, setWavesurfer] = useState()
+    const waveformDivRef = useRef()
     const dispatch = useDispatch()
     const selectedRegion = useSelector(state => state.selectedRegion)
     const regions = useSelector(state => state.regions)
+
+    useEffect(() => {
+        for (let region of regions) {
+            region.updateRender()
+        }
+    }, [regions])
 
     useEffect(() => {
         if (!selectedRegion) return
@@ -41,12 +47,15 @@ export default function Waveform() {
     let onRegionCreated = region => {
         console.log('Region was created: ', region.id)
 
-        region.drag = false
         region.children = []
 
         region.on('update', event => dispatch(updateRegion(region.id, region.start,region.end)))
         region.on('click', event => dispatch(setSelectedRegion(region)))
         dispatch(addRegion(region))
+        region.update({
+            drag: false,
+            color: randomRGBA()
+        })
     }
 
     // utilities
@@ -103,6 +112,7 @@ export default function Waveform() {
     }
 
     useEffect(() => {
+        console.log(zoom)
         wavesurfer && wavesurfer.zoom(zoom)
     }, [zoom])
 

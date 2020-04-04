@@ -2523,7 +2523,6 @@ WaveSurfer.Region = {
             this.attributes = params.attributes;
         }
 
-        this.updateRender();
         this.fireEvent('update');
         this.wavesurfer.fireEvent('region-updated', this);
     },
