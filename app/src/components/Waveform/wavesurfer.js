@@ -2356,8 +2356,8 @@ WaveSurfer.Regions = {
     add: function (params) {
         var region = Object.create(WaveSurfer.Region);
         region.init(params, this.wavesurfer);
-
         this.list[region.id] = region;
+
 
         region.on('remove', (function () {
             delete this.list[region.id];
@@ -2486,7 +2486,11 @@ WaveSurfer.Region = {
         this.onZoom = this.updateRender.bind(this);
         this.wavesurfer.on('zoom', this.onZoom);
 
-        this.wavesurfer.fireEvent('region-created', this);
+        let fire = params.suppressFire === undefined ? true : false
+        if (fire) {
+            console.log('Firing region-created!')
+            this.wavesurfer.fireEvent('region-created', this);
+        }
 
     },
 

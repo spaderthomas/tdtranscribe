@@ -6,7 +6,7 @@ import React, {
 } from 'react'
 
 import { useDispatch, useSelector } from "react-redux"
-import { addRegion, setSelectedRegion, addToChildren, addRootRegion, updateRegion } from '../../actions/Actions'
+import { addRegion, setSelectedRegion, addToChildren, addRootRegion, moveRegion, setRegionVisibility } from '../../actions/Actions'
 
 import { randomInt, randomRGBA } from '../../Utils'
 
@@ -27,9 +27,23 @@ export default function Waveform() {
     const regions = useSelector(state => state.regions)
 
     useEffect(() => {
+        if (!wavesurfer) return
+
+        for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
+            region.remove()
+        }
+
+        for (let region of regions) {
+            if (region.isVisible && !(region.id in wavesurfer.regions.list)) {
+                region.suppressFire = true
+                wavesurfer.regions.add(region)
+            }
+        }
+
         for (let region of regions) {
             region.updateRender()
         }
+
     }, [regions])
 
     useEffect(() => {
@@ -41,15 +55,30 @@ export default function Waveform() {
 
         wavesurfer.seekTo(floatCenter)
         setZoom(width / seconds)
-        clearWavesurferRegions()
+
+        for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
+            region.remove()
+            dispatch(setRegionVisibility(id, false))
+        }
     }, [selectedRegion])
+
+    useEffect(() => {
+        if (!wavesurfer) return
+
+        wavesurfer.zoom(zoom)
+
+        for (let region of regions) {
+            if (region.root) {
+                dispatch(setRegionVisibility(region.id, true))
+            }
+        }
+
+    }, [zoom])
 
     let onRegionCreated = region => {
         console.log('Region added to Wavesurfer: ', region.id)
 
-        region.children = []
-
-        region.on('update', event => dispatch(updateRegion(region.id, region.start,region.end)))
+        region.on('update', event => dispatch(moveRegion(region.id, region.start, region.end)))
         region.on('click', event => dispatch(setSelectedRegion(region)))
         dispatch(addRegion(region))
     }
@@ -57,11 +86,13 @@ export default function Waveform() {
     // utilities
     let addKeyListeners = () => {
         document.addEventListener('keydown', event => {
-            if (event.key === ' ') {
-                wavesurfer.play(0, wavesurfer.getDuration())
-            }
-            else if (event.key === 'p') {
-                wavesurfer.playPause()
+            switch (event.key) {
+                case ' ':
+                    wavesurfer.play(0, wavesurfer.getDuration())
+                case 'p':
+                    wavesurfer.playPause()
+                case '':
+                    console.log('gi')
             }
         })
     }
@@ -101,25 +132,7 @@ export default function Waveform() {
         }
     }, []);
 
-    let clearWavesurferRegions = () => {
-        for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
-            region.remove()
-        }
-    }
-
-    useEffect(() => {
-        if (!wavesurfer) return
-
-        wavesurfer.zoom(zoom)
-
-        for (let region of regions) {
-            if (region.root && !(region.id in wavesurfer.regions.list)) {
-                wavesurfer.regions.add(region)
-            }
-        }
-    }, [zoom])
-
     return (
-        <div ref={waveformDivRef} className={styles.waveform} />
+        <div ref={waveformDivRef} className={styles.waveform}></div>
     )
 }

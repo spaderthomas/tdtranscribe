@@ -2,7 +2,8 @@ export const ADD_REGION = 'AddRegion'
 export const SET_SELECTED_REGION = 'SetSelectedRegion'
 export const ADD_CHILD = 'AddChild'
 export const ADD_ROOT_REGION = 'AddRootRegion'
-export const UPDATE_REGION = 'UpdateRegion'
+export const MOVE_REGION = 'MoveRegion'
+export const SET_REGION_VISIBILITY = 'SetRegionVisibility'
 
 export const addRegion = (region) => {
     return {    
@@ -33,11 +34,18 @@ export const addRootRegion = (region) => {
     }
 }
 
-export const updateRegion = (id, start, end) => {
+export const moveRegion = (id, start, end) => {
     return {
-        type: UPDATE_REGION,
+        type: MOVE_REGION,
         id: id,
         start: start,
         end: end
+    }
+}
+
+export const setRegionVisibility = (id, isVisible) => {
+    return {
+        type: SET_REGION_VISIBILITY,
+        isVisible: isVisible
     }
 }
