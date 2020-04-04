@@ -728,6 +728,7 @@ WaveSurfer.Observer = {
      * Remove an event handler.
      */
     un: function (event, fn) {
+        console.log('un: ', event)
         if (!this.handlers) { return; }
 
         var handlers = this.handlers[event];
@@ -2488,7 +2489,6 @@ WaveSurfer.Region = {
 
         let fire = params.suppressFire === undefined ? true : false
         if (fire) {
-            console.log('Firing region-created!')
             this.wavesurfer.fireEvent('region-created', this);
         }
 
@@ -2709,6 +2709,7 @@ WaveSurfer.Region = {
         });
 
         this.element.addEventListener('click', function (e) {
+            console.log('og click handler')
             e.preventDefault();
             my.fireEvent('click', e);
             my.wavesurfer.fireEvent('region-click', my, e);

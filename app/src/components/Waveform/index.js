@@ -6,7 +6,13 @@ import React, {
 } from 'react'
 
 import { useDispatch, useSelector } from "react-redux"
-import { addRegion, setSelectedRegion, addToChildren, addRootRegion, moveRegion, setRegionVisibility } from '../../actions/Actions'
+import { 
+    addRegion, 
+    setSelectedRegion,  
+    moveRegion, 
+    setRegionVisibility,
+    showRootRegions
+} from '../../actions/Actions'
 
 import { randomInt, randomRGBA } from '../../Utils'
 
@@ -29,13 +35,14 @@ export default function Waveform() {
     useEffect(() => {
         if (!wavesurfer) return
 
-        for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
-            region.remove()
-        }
-
         for (let region of regions) {
+            if (!region.isVisible) {
+                console.log('removing region from ws: ', region.id)
+                region.remove()
+            }
             if (region.isVisible && !(region.id in wavesurfer.regions.list)) {
                 region.suppressFire = true
+                console.log('add to ws: ', region.id)
                 wavesurfer.regions.add(region)
             }
         }
@@ -55,31 +62,23 @@ export default function Waveform() {
 
         wavesurfer.seekTo(floatCenter)
         setZoom(width / seconds)
-
-        for (let [id, region] of Object.entries(wavesurfer.regions.list)) {
-            region.remove()
-            dispatch(setRegionVisibility(id, false))
-        }
     }, [selectedRegion])
 
     useEffect(() => {
         if (!wavesurfer) return
 
         wavesurfer.zoom(zoom)
-
-        for (let region of regions) {
-            if (region.root) {
-                dispatch(setRegionVisibility(region.id, true))
-            }
-        }
-
     }, [zoom])
 
     let onRegionCreated = region => {
-        console.log('Region added to Wavesurfer: ', region.id)
-
-        region.on('update', event => dispatch(moveRegion(region.id, region.start, region.end)))
-        region.on('click', event => dispatch(setSelectedRegion(region)))
+        console.log('on region created: ', region.id)
+        region.on('update', event => {
+            dispatch(moveRegion(region.id, region.start, region.end))
+        })
+        region.on('click', event => {
+            console.log('nephew click handler')
+            dispatch(setSelectedRegion(region))
+        })
         dispatch(addRegion(region))
     }
 
@@ -101,6 +100,8 @@ export default function Waveform() {
         waveformDivRef.current.addEventListener('wheel', async (event) => {
             var scaled = event.deltaY / 50
             setZoom(zoom => Math.max(zoom - scaled, 0))
+
+            dispatch(showRootRegions())
         })
     }
 

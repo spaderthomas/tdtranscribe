@@ -3,7 +3,8 @@ import {
     SET_SELECTED_REGION,
     ADD_CHILD,
     MOVE_REGION,
-    SET_REGION_VISIBILITY
+    SET_REGION_VISIBILITY,
+    SHOW_ROOT_REGIONS
 } from '../actions/Actions'
 
 import { pureArrayPush, findRegion, snapEpsilon, randomRGBA } from '../Utils'
@@ -32,9 +33,15 @@ export const rootReducer = (state = initialState, action) => {
                 ...state,
                 regions: pureArrayPush(state.regions, action.region)
             }
-        case SET_SELECTED_REGION:
+        case SET_SELECTED_REGION: 
+            let regions = [...state.regions]
+            for (let region of regions) {
+                region.isVisible = false
+            }
+
             return {
                 ...state,
+                regions: regions,
                 selectedRegion: action.region,
             }
         case ADD_CHILD:
@@ -71,13 +78,25 @@ export const rootReducer = (state = initialState, action) => {
         }
         case SET_REGION_VISIBILITY: {
             let regions = [...state.regions]
-            let region = findRegion(regions.action.id)
+            let region = findRegion(regions, action.id)
             region.isVisible = action.isVisible
 
             return {
                 ...state,
                 regions: regions
             }
+        }
+        case SHOW_ROOT_REGIONS: {
+            let regions = [...state.regions]
+            for (let region of regions) {
+                region.isVisible = true
+            }
+
+            return {
+                ...state,
+                regions: regions
+            }
+
         }
         default:
             return state;

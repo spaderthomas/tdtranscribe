@@ -4,6 +4,7 @@ export const ADD_CHILD = 'AddChild'
 export const ADD_ROOT_REGION = 'AddRootRegion'
 export const MOVE_REGION = 'MoveRegion'
 export const SET_REGION_VISIBILITY = 'SetRegionVisibility'
+export const SHOW_ROOT_REGIONS = 'ShowRootRegions'
 
 export const addRegion = (region) => {
     return {    
@@ -46,6 +47,13 @@ export const moveRegion = (id, start, end) => {
 export const setRegionVisibility = (id, isVisible) => {
     return {
         type: SET_REGION_VISIBILITY,
+        id: id,
         isVisible: isVisible
+    }
+}
+
+export const showRootRegions = () => {
+    return {
+        type: SHOW_ROOT_REGIONS
     }
 }

@@ -22,7 +22,7 @@ export const randomInt = (min, max) => {
 }
 
 export const randomRGBA = () => {
-    return 'rgba(' + randomInt(0, 255).toString() + ', ' + randomInt(0, 255).toString() + ', ' + randomInt(0, 255).toString() + ', 0.1)'
+    return 'rgba(' + randomInt(0, 255).toString() + ', ' + randomInt(0, 255).toString() + ', ' + randomInt(0, 255).toString() + ', 0.5)'
 }
 
 export const findRegion = (regions, id) => {
