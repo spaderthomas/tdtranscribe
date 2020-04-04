@@ -56,7 +56,7 @@ export default function Waveform() {
         for (let region of regions) {
             if (!region.isVisible) {
                 let wsRegion = wavesurfer.regions.list[region.id]
-                wsRegion.remove() // This is a noop if it's not in WS
+                if (wsRegion) wsRegion.remove()
             }
             if (region.isVisible && !(region.id in wavesurfer.regions.list)) {
                 region.suppressFire = true

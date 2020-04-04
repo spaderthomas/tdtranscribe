@@ -21,25 +21,28 @@ const getUniqueNodeId = (() => {
 })()
 
 
-const RegionViewerItem = (props) => {
-    let children = []
-    for (let child of props.region.children) {
-        children.push(<RegionViewerItem region={child} key={getUniqueNodeId()}></RegionViewerItem>)
-    }
-
-    let timeString = props.region.start.toFixed() + ", " + props.region.end.toFixed()
-    return (
-        <TreeItem nodeId={getUniqueNodeId()} label={timeString}>
-            {children}
-        </TreeItem>
-    )
-}
 export default function RegionViewer() {
     let regions = useSelector(state => state.regions)
+    let [uniqueIdMap, setUniqueIdMap] = useState({})
 
+    let recurse = region => {
+        if 
+        let children = []
+        for (let child of region.children) {
+            children.push(<RegionViewerItem region={child} key={getUniqueNodeId()}></RegionViewerItem>)
+        }
+
+        let timeString = region.start.toFixed() + ", " + region.end.toFixed()
+        return (
+            <TreeItem nodeId={getUniqueNodeId()} label={timeString}>
+                {children}
+            </TreeItem>
+        )
+    }
     let items = []
     for (let region of regions) {
         if (region.root) {
+            let uniqueId = 
             items.push(<RegionViewerItem region={region} key={getUniqueNodeId()}></RegionViewerItem>)
         }
     }
