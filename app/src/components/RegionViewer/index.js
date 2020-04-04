@@ -20,11 +20,12 @@ const getUniqueNodeId = (() => {
     }
 })()
 
+
 const RegionViewerItem = (props) => {
     let children = []
     for (let child of props.region.children) {
-        children.push(<RegionViewerItem region={child}></RegionViewerItem>)
-    }   
+        children.push()
+    }
 
     let timeString = props.region.start.toFixed() + ", " + props.region.end.toFixed()
     return (

@@ -1,7 +1,7 @@
 // Basic init
 const electron = require('electron')
 const {app, BrowserWindow} = electron
-const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer');
+const { default: installExtension, REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } = require('electron-devtools-installer');
 // Let electron reloads by itself when webpack watches changes in ./app/
 require('electron-reload')(__dirname)
 
@@ -11,6 +11,10 @@ let mainWindow
 app.on('ready', () => {
 
     installExtension(REACT_DEVELOPER_TOOLS)
+        .then((name) => console.log(`Added Extension:  ${name}`))
+        .catch((err) => console.log('An error occurred: ', err));
+
+    installExtension(REDUX_DEVTOOLS)
         .then((name) => console.log(`Added Extension:  ${name}`))
         .catch((err) => console.log('An error occurred: ', err));
 

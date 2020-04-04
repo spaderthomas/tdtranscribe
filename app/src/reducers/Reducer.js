@@ -6,15 +6,11 @@ import {
 import { pureArrayPush } from '../Utils'
 const initialState = {
     regions: [],
-    selectedRegion: null
+    selectedRegion: null,
+    dog: 10
 }
 
 export const rootReducer = (state = initialState, action) => {
-    if (typeof state === 'undefined') {
-        console.log('NO STATE YET')
-        return initialState
-    }
-
     switch (action.type) {
         case ADD_REGION:
             return {
@@ -24,7 +20,8 @@ export const rootReducer = (state = initialState, action) => {
         case SET_SELECTED_REGION:
             return {
                 ...state,
-                selectedRegion: action.region
+                selectedRegion: action.region,
+                dog: state.dog + 1
             }
         default:
             return state;
