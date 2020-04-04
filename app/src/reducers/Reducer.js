@@ -6,7 +6,7 @@ import {
     UPDATE_REGION
 } from '../actions/Actions'
 
-import { pureArrayPush, findRegion, snapEpsilon } from '../Utils'
+import { pureArrayPush, findRegion, snapEpsilon, randomRGBA } from '../Utils'
 
 const initialState = {
     regions: [],
@@ -21,6 +21,8 @@ export const rootReducer = (state = initialState, action) => {
                 state.selectedRegion.children.push(action.region)
             } else {
                 action.region.root = true
+                action.region.drag = false
+                action.region.color = randomRGBA()
             }
     
             return {
@@ -58,7 +60,7 @@ export const rootReducer = (state = initialState, action) => {
 
             if (!snappedStart) region.start = action.start
             if (!snappedEnd) region.end = action.end
-            
+
             return {
                 ...state,
                 regions: regions

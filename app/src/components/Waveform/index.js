@@ -45,17 +45,13 @@ export default function Waveform() {
     }, [selectedRegion])
 
     let onRegionCreated = region => {
-        console.log('Region was created: ', region.id)
+        console.log('Region added to Wavesurfer: ', region.id)
 
         region.children = []
 
         region.on('update', event => dispatch(updateRegion(region.id, region.start,region.end)))
         region.on('click', event => dispatch(setSelectedRegion(region)))
         dispatch(addRegion(region))
-        region.update({
-            drag: false,
-            color: randomRGBA()
-        })
     }
 
     // utilities
@@ -112,8 +108,15 @@ export default function Waveform() {
     }
 
     useEffect(() => {
-        console.log(zoom)
-        wavesurfer && wavesurfer.zoom(zoom)
+        if (!wavesurfer) return
+
+        wavesurfer.zoom(zoom)
+
+        for (let region of regions) {
+            if (region.root && !(region.id in wavesurfer.regions.list)) {
+                wavesurfer.regions.add(region)
+            }
+        }
     }, [zoom])
 
     return (
