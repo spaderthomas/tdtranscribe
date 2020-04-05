@@ -2381,6 +2381,7 @@ WaveSurfer.Regions = {
         var touchId;
         var slop = params.slop || 2;
         var pxMove = 0;
+        var epsilon = 2
 
         var eventDown = function (e) {
             if (e.touches && e.touches.length > 1) { return; }
@@ -2405,17 +2406,33 @@ WaveSurfer.Regions = {
 
         var eventUp = function (e) {
             if (e.touches && e.touches.length > 1) { return; }
+            if (!region) { return }
 
             drag = false;
             pxMove = 0;
 
+            // Snap the region to the start/end if it's close enough
+            let start = region.start
+            let end = region.end
+            if (start <= epsilon) {
+                start = 0
+            }
+            if (my.wavesurfer.getDuration() - end <= epsilon) {
+                end = my.wavesurfer.getDuration()
+            }
+
             if (region) {
+                region.update({
+                    start: start,
+                    end: end
+                })
                 region.fireEvent('update-end', e);
                 my.wavesurfer.fireEvent('region-update-end', region, e);
             }
 
             region = null;
         };
+        this.wrapper.addEventListener('mouseleave', eventUp)
         this.wrapper.addEventListener('mouseup', eventUp);
         this.wrapper.addEventListener('touchend', eventUp);
         this.on('disable-drag-selection', function() {
@@ -2427,8 +2444,14 @@ WaveSurfer.Regions = {
             if (!drag) { return; }
             if (++pxMove <= slop) { return; }
 
-            if (e.touches && e.touches.length > 1) { return; }
-            if (e.targetTouches && e.targetTouches[0].identifier != touchId) { return; }
+            if (e.touches && e.touches.length > 1)  {
+                console.log('touches')
+                return;
+            }
+            if (e.targetTouches && e.targetTouches[0].identifier != touchId) { 
+                console.log('target touches')
+                return;
+            }
 
             if (!region) {
                 region = my.add(params || {});

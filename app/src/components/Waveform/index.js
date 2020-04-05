@@ -63,7 +63,8 @@ export default function Waveform() {
                 let wsRegion = wavesurfer.regions.add(region)
                 setRegionCallbacks(wsRegion)
             }
-        }
+        } 
+
 
         for (let region of regions) {
             region.updateRender()
