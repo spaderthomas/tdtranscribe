@@ -4,7 +4,8 @@ import {
     ADD_CHILD,
     MOVE_REGION,
     SET_REGION_VISIBILITY,
-    SHOW_ROOT_REGIONS
+    SHOW_ROOT_REGIONS,
+    UPDATE_DISPLAY_NAME
 } from '../actions/Actions'
 
 import { pureArrayPush, findRegion, snapEpsilon, randomRGBA } from '../Utils'
@@ -36,6 +37,7 @@ export const rootReducer = (state = initialState, action) => {
         case SET_SELECTED_REGION: {
             let regions = [...state.regions]
             let selected = findRegion(regions, action.id)
+            console.log(action.id)
             if (selected) {
                 for (let region of regions) {
                     region.isVisible = false
@@ -106,6 +108,16 @@ export const rootReducer = (state = initialState, action) => {
                 selectedRegion: null
             }
 
+        }
+        case UPDATE_DISPLAY_NAME: {
+            let regions = [...state.regions]
+            let region = findRegion(regions, action.id)
+            region.displayName = action.name
+
+            return { 
+                ...state,
+                regions: regions
+            }
         }
         default:
             return state;
