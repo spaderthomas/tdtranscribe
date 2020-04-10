@@ -47,7 +47,7 @@ const Subtree = ({ region }) => {
 
     let children = []
     for (let child of region.children) {
-        children.push(<Subtree region={child} />)
+        children.push(<Subtree region={child} key={getUniqueId(region)} />)
     }
 
     let label

@@ -37,7 +37,6 @@ export const rootReducer = (state = initialState, action) => {
         case SET_SELECTED_REGION: {
             let regions = [...state.regions]
             let selected = findRegion(regions, action.id)
-            console.log(action.id)
             if (selected) {
                 for (let region of regions) {
                     region.isVisible = false
@@ -68,7 +67,6 @@ export const rootReducer = (state = initialState, action) => {
             let snappedStart, snappedEnd = false
             for (let other of state.regions) {
                 if (Math.abs(other.start - region.end) < snapEpsilon) {
-                    console.log('snapped!')
                     region.end = other.start
                     snappedEnd = true
                 }
