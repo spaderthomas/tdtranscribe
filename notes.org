@@ -1,0 +1,28 @@
+- Load a song from the filesystem or from MP3
+- Saving and loading projects
+  - Where do the save files go? 
+  - How do I make sure the user has to do nothing besides load an MP3? 
+  - What if they change the path to the file -- should it still load the same project?
+  - Can I just serialize the redux store? 
+- Add the top menu
+  - Save a project
+  - Load a project
+- Training
+  - Create a 'cutscene' on first boot to show how to use it?
+  - Make a YouTube video 
+- Allow you to select multiple sub-regions to loop
+  - This could be useful in other ways. For example, if you could rectangle
+    select regions, or shift-click them, you could batch edit their color. 
+- Pick a color pallet
+- Let you add notes for each region.
+- A slider to slow down or speed up the music. 
+- Licensing
+  - How do I do a perpetual fallback license?
+  - How do I do feature-lock in a way that isn't crackable? Is this possible
+    with JS?
+
+really cool shit:
+- ability to make musical flash cards. phrases, licks, or scales you need to
+  practice
+- turn a region into a musical flash card
+- spaced repetition
