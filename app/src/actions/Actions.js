@@ -1,16 +1,24 @@
 export const ADD_REGION = 'AddRegion'
 export const SET_SELECTED_REGION = 'SetSelectedRegion'
 export const ADD_CHILD = 'AddChild'
-export const ADD_ROOT_REGION = 'AddRootRegion'
 export const MOVE_REGION = 'MoveRegion'
 export const SET_REGION_VISIBILITY = 'SetRegionVisibility'
 export const SHOW_ROOT_REGIONS = 'ShowRootRegions'
 export const UPDATE_DISPLAY_NAME = 'UpdateDisplayName'
+export const REMOVE_REGION = 'RemoveRegion'
 
 export const addRegion = (region) => {
     return {    
         type: ADD_REGION,
         region: region
+    }
+}
+
+
+export const removeRegion = (id) => {
+    return {    
+        type: REMOVE_REGION,
+        id: id
     }
 }
 
@@ -26,13 +34,6 @@ export const addToChildren = (parent, child) => {
         type: ADD_CHILD,
         parent: parent,
         child: child
-    }
-}
-
-export const addRootRegion = (region) => {
-    return {
-        type: ADD_ROOT_REGION,
-        region: region
     }
 }
 

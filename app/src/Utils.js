@@ -103,3 +103,41 @@ export const findRegion = (regions, id) => {
 }
 
 export const snapEpsilon = 1
+
+import { useRef, useEffect } from 'react'
+
+export const useEventListener = (eventName, handler, element = document) => {
+	const saved = useRef()
+
+	useEffect(() => {
+		saved.current = handler
+	}, [handler])
+
+	useEffect(() => {
+		if (!element) return () => {}
+
+		let eventHandler = event => saved.current(event)
+
+		console.log(element)
+		element.addEventListener(eventName, eventHandler)
+
+		let cleanup = () => {
+			element.removeEventListener(eventName, eventHandler)
+		}
+		return cleanup
+	}, [element])
+}
+
+export const useRegionListener = (eventType, listener, wavesurfer) => {
+	if (!wavesurfer || !wavesurfer.regions) {
+		useEventListener(eventType, listener, null)
+		return
+	}
+
+	useEventListener(eventType, listener, wavesurfer.regions.wrapper)
+}
+
+export const removeWavesurferRegion = (wavesurfer, id) => {
+	let region = wavesurfer.regions.list[id]
+	if (region) region.remove()
+}

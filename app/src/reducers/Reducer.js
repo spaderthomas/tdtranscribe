@@ -5,7 +5,8 @@ import {
     MOVE_REGION,
     SET_REGION_VISIBILITY,
     SHOW_ROOT_REGIONS,
-    UPDATE_DISPLAY_NAME
+    UPDATE_DISPLAY_NAME,
+    REMOVE_REGION
 } from '../actions/Actions'
 
 import { pureArrayPush, findRegion, snapEpsilon, randomRGBA } from '../Utils'
@@ -113,6 +114,24 @@ export const rootReducer = (state = initialState, action) => {
             region.displayName = action.name
 
             return { 
+                ...state,
+                regions: regions
+            }
+        }
+        case REMOVE_REGION: {
+            let regions = [...state.regions]
+            let index = 0
+            for (let i = 0; i < regions.length; i++) {
+                let region = regions[i]
+                if (region.id === action.id) {
+                    index = i
+                    break
+                }
+            }
+
+            regions.splice(index, 1)
+
+            return {
                 ...state,
                 regions: regions
             }

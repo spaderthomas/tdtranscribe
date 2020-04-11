@@ -5,16 +5,26 @@ import React, {
     useLayoutEffect
 } from 'react'
 
-import { useDispatch, useSelector } from "react-redux"
 import { 
-    addRegion, 
-    setSelectedRegion,  
-    moveRegion, 
+    useDispatch, 
+    useSelector 
+} from 'react-redux'
+
+import {
+    addRegion,
+    setSelectedRegion,
+    moveRegion,
     setRegionVisibility,
-    showRootRegions
+    showRootRegions,
+    removeRegion
 } from '../../actions/Actions'
 
-import { randomInt, randomRGBA } from '../../Utils'
+import { 
+    useEventListener,
+    useRegionListener,
+    snapEpsilon,
+    removeWavesurferRegion
+ } from '../../Utils'
 
 import { WaveSurfer } from './wavesurfer'
 
@@ -31,6 +41,12 @@ export default function Waveform() {
     const dispatch = useDispatch()
     const selectedRegion = useSelector(state => state.selectedRegion)
     const regions = useSelector(state => state.regions)
+
+    const [dragging, setDragging] = useState(false)
+    const [draggingRegion, setDraggingRegion] = useState()
+    const [pxMove, setPxMove] = useState()
+    const [slop, setSlop] = useState()
+    const [dragStart, setDragStart] = useState()
 
     let onRegionClick = region => {
         dispatch(setSelectedRegion(region.id))
@@ -55,16 +71,14 @@ export default function Waveform() {
 
         for (let region of regions) {
             if (!region.isVisible) {
-                let wsRegion = wavesurfer.regions.list[region.id]
-                if (wsRegion) wsRegion.remove()
+                removeWavesurferRegion(wavesurfer, region.id)
             }
             if (region.isVisible && !(region.id in wavesurfer.regions.list)) {
                 region.suppressFire = true
                 let wsRegion = wavesurfer.regions.add(region)
                 setRegionCallbacks(wsRegion)
             }
-        } 
-
+        }
 
         for (let region of regions) {
             region.updateRender()
@@ -89,19 +103,92 @@ export default function Waveform() {
         wavesurfer.zoom(zoom)
     }, [zoom])
 
-
-
     // utilities
-    let addKeyListeners = () => {
-        document.addEventListener('keydown', event => {
-            switch (event.key) {
-                case ' ':
-                    wavesurfer.play(0, wavesurfer.getDuration())
-                case 'p':
-                    wavesurfer.playPause()
-            }
-        })
+    let onSpace = event => {
+        if (event.key != ' ') return
+        wavesurfer.play(0, wavesurfer.getDuration())
     }
+    let onP = event => {
+        if (event.key != 'p') return
+        wavesurfer.playPause()
+    }
+    let onEscape = event => {
+        if (event.key != 'Escape') return
+        if (!draggingRegion) return
+
+        dispatch(removeRegion(draggingRegion.id))
+        removeWavesurferRegion(wavesurfer, draggingRegion.id)
+
+        setDragging(false)
+        setDraggingRegion(null)
+        setDragStart(-1)
+    }
+
+    useEventListener('keydown', onSpace)
+    useEventListener('keydown', onP)
+    useEventListener('keydown', onEscape)
+
+
+    let onWavesurferBeginDrag = event => {
+        if (event.touches && event.touches.length > 1) { return }
+
+        // Check whether the click/tap is on the bottom-most DOM element
+        // Effectively prevent clicks on the scrollbar from registering as
+        // region creation.
+        if (event.target.childElementCount > 0) { return }
+
+        let region = wavesurfer.regions.add()
+        setDragStart(wavesurfer.drawer.handleEvent(event, true))
+        setDragging(true)
+        setDraggingRegion(region)
+    };
+    useRegionListener('mousedown', onWavesurferBeginDrag, wavesurfer)
+
+    let onWavesurferEndDrag = (e) => {
+        if (e.touches && e.touches.length > 1) { return; }
+        if (!draggingRegion) { return }
+
+        setDragging(false)
+        setPxMove(0)
+
+        // Snap the region to the start/end if it's close enough
+        let start = draggingRegion.start
+        let end = draggingRegion.end
+        if (start <= snapEpsilon) {
+            start = 0
+        }
+        if (wavesurfer.getDuration() - end <= snapEpsilon) {
+            end = wavesurfer.getDuration()
+        }
+
+        draggingRegion.update({
+            start: start,
+            end: end
+        })
+        draggingRegion.fireEvent('update-end', e);
+        wavesurfer.fireEvent('region-update-end', draggingRegion, e);
+
+        setDraggingRegion(null)
+    };
+    useRegionListener('mouseleave', onWavesurferEndDrag, wavesurfer)
+    useRegionListener('mouseup', onWavesurferEndDrag, wavesurfer)
+
+    let onMoveMouse = e => {
+        if (!dragging) { return; }
+
+        if (pxMove + 1 <= slop) { 
+            setPxMove(pxMove + 1)
+            return;
+         }
+
+        let duration = wavesurfer.getDuration()
+        let position = wavesurfer.drawer.handleEvent(e)
+        draggingRegion.update({
+            start: Math.min(position * duration, dragStart * duration),
+            end: Math.max(position * duration, dragStart * duration)
+        });
+    };
+    useRegionListener('mousemove', onMoveMouse, wavesurfer)
 
     let addScrollListener = () => {
         waveformDivRef.current.addEventListener('wheel', async (event) => {
@@ -123,16 +210,17 @@ export default function Waveform() {
     useEffect(() => {
         if (!wavesurfer) return
 
-        addKeyListeners()
         addScrollListener()
         wavesurfer.load(Kovo)
 
-        wavesurfer.enableDragSelection({})
+        wavesurfer.initRegions()
 
         wavesurfer.on('play', progress => {
             wavesurfer.drawer.recenter(progress)
         })
         wavesurfer.on('region-created', onRegionCreated)
+
+        setInitialized(true)
     }, [wavesurfer])
 
     useLayoutEffect(() => {
@@ -145,3 +233,5 @@ export default function Waveform() {
         <div ref={waveformDivRef} className={styles.waveform}></div>
     )
 }
+
+
