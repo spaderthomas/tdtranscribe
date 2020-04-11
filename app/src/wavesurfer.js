@@ -2354,7 +2354,6 @@ WaveSurfer.Regions = {
 
     /* Add a region. */
     add: function (params = {}) {
-        console.log(params)
         var region = Object.create(WaveSurfer.Region);
         region.init(params, this.wavesurfer);
         this.list[region.id] = region;

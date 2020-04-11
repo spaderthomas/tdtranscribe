@@ -70,7 +70,6 @@ const Subtree = ({ region }) => {
 
     let onClick = event => {
         setInput(true)
-        console.log('double click')
     }
     return (
         <TreeItem onDoubleClick={onClick} nodeId={getUniqueId(region)} key={getUniqueId(region)} label={label}>

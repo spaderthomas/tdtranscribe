@@ -9,7 +9,6 @@ export default class Link extends Component {
     }
 
     render () {
-      console.log(styles);
         return (
             <a href='#' onClick={ () => {this.link(this.props.to)} } className={styles.link} >
                 {this.props.children}

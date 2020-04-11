@@ -6,16 +6,23 @@ import React, {
 
 import Waveform from '../Waveform/'
 import RegionViewer from '../RegionViewer/'
-
-import Button from '@material-ui/core/Button'
+import SpeedSlider from '../SpeedSlider/'
 
 import styles from './styles.css'
 
 export default function MainPage() {
     return (
-        <div className={styles.container}>
+        <div className={styles.content}>
+            <div className={styles.waveformAndSlider}>
+                <div className={styles.waveformContainer}>
+                    <Waveform />
+                </div>
+                <div className={styles.sliderContainer}>
+                    <SpeedSlider />
+                </div>
+            </div>
+
             <RegionViewer />
-            <Waveform />
         </div>
     )
 }

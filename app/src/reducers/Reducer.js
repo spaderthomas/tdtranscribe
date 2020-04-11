@@ -6,14 +6,18 @@ import {
     SET_REGION_VISIBILITY,
     SHOW_ROOT_REGIONS,
     UPDATE_DISPLAY_NAME,
-    REMOVE_REGION
+    REMOVE_REGION,
+    INIT_WAVESURFER
 } from '../actions/Actions'
 
 import { pureArrayPush, findRegion, snapEpsilon, randomRGBA } from '../Utils'
 
+import { WaveSurfer } from '../wavesurfer'
+
 const initialState = {
     regions: [],
     selectedRegion: null,
+    wavesurfer: null
 }
 
 export const rootReducer = (state = initialState, action) => {
@@ -136,6 +140,16 @@ export const rootReducer = (state = initialState, action) => {
                 regions: regions
             }
         }
+        case INIT_WAVESURFER: {
+            let wavesurfer = WaveSurfer.create({
+                container: action.element,
+                waveColor: 'blue'
+            })
+            return { 
+                ...state,
+                wavesurfer: wavesurfer
+            }
+        } 
         default:
             return state;
     }

@@ -14,7 +14,7 @@ import MainPage from './components/MainPage/'
 // Assets
 import VoidstarLogo from './assets/voidstar-logo.png'
 const logos = [
-    VoidstarLogo
+    //VoidstarLogo
 ]
 
 
@@ -27,9 +27,9 @@ export default function App() {
     return (
         <Provider store={store}>
             <div className="main">
-                <div className="header">
+                {/* <div className="header">
                     {logosRender}
-                </div>
+                </div> */}
                 <MainPage />
             </div>
         </Provider>

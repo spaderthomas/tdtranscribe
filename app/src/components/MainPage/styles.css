@@ -1,9 +1,26 @@
-.container {
+.content {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: space-between;
     margin-left: 1%;
     margin-right: 1%;
     margin-bottom: 1%;
     height: 100%;
+}
+
+.waveformAndSlider {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.waveformContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+.sliderContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }

@@ -118,7 +118,6 @@ export const useEventListener = (eventName, handler, element = document) => {
 
 		let eventHandler = event => saved.current(event)
 
-		console.log(element)
 		element.addEventListener(eventName, eventHandler)
 
 		let cleanup = () => {

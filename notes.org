@@ -26,3 +26,6 @@ really cool shit:
   practice
 - turn a region into a musical flash card
 - spaced repetition
+
+* done
+- press escape to cancel creating a region

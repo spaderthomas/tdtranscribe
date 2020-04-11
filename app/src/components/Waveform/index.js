@@ -5,9 +5,9 @@ import React, {
     useLayoutEffect
 } from 'react'
 
-import { 
-    useDispatch, 
-    useSelector 
+import {
+    useDispatch,
+    useSelector
 } from 'react-redux'
 
 import {
@@ -16,19 +16,21 @@ import {
     moveRegion,
     setRegionVisibility,
     showRootRegions,
-    removeRegion
+    removeRegion,
+    initWavesurfer
 } from '../../actions/Actions'
 
-import { 
+import {
     useEventListener,
     useRegionListener,
     snapEpsilon,
     removeWavesurferRegion
- } from '../../Utils'
+} from '../../Utils'
 
-import { WaveSurfer } from './wavesurfer'
 
 import Kovo from '../../assets/kovo.wav'
+
+import Slider from '@material-ui/core/Slider'
 
 import styles from './styles.css'
 
@@ -36,9 +38,11 @@ export default function Waveform() {
     const [zoom, setZoom] = useState(0)
     const [width, setWidth] = useState(width);
     const [initialized, setInitialized] = useState(false)
-    const [wavesurfer, setWavesurfer] = useState()
     const waveformDivRef = useRef()
+    
     const dispatch = useDispatch()
+    
+    const wavesurfer = useSelector(state => state.wavesurfer)
     const selectedRegion = useSelector(state => state.selectedRegion)
     const regions = useSelector(state => state.regions)
 
@@ -137,19 +141,17 @@ export default function Waveform() {
         // region creation.
         if (event.target.childElementCount > 0) { return }
 
-        let region = wavesurfer.regions.add()
         setDragStart(wavesurfer.drawer.handleEvent(event, true))
         setDragging(true)
-        setDraggingRegion(region)
     };
     useRegionListener('mousedown', onWavesurferBeginDrag, wavesurfer)
 
     let onWavesurferEndDrag = (e) => {
-        if (e.touches && e.touches.length > 1) { return; }
-        if (!draggingRegion) { return }
-
         setDragging(false)
         setPxMove(0)
+
+        if (!draggingRegion) { return }
+
 
         // Snap the region to the start/end if it's close enough
         let start = draggingRegion.start
@@ -176,14 +178,20 @@ export default function Waveform() {
     let onMoveMouse = e => {
         if (!dragging) { return; }
 
-        if (pxMove + 1 <= slop) { 
+        let region = draggingRegion
+        if (!region) { 
+            region = wavesurfer.regions.add()
+            setDraggingRegion(region)
+        }
+
+        if (pxMove + 1 <= slop) {
             setPxMove(pxMove + 1)
             return;
-         }
+        }
 
         let duration = wavesurfer.getDuration()
         let position = wavesurfer.drawer.handleEvent(e)
-        draggingRegion.update({
+        region.update({
             start: Math.min(position * duration, dragStart * duration),
             end: Math.max(position * duration, dragStart * duration)
         });
@@ -201,10 +209,7 @@ export default function Waveform() {
     }
 
     useEffect(() => {
-        setWavesurfer(WaveSurfer.create({
-            container: waveformDivRef.current,
-            waveColor: 'blue'
-        }))
+        dispatch(initWavesurfer(waveformDivRef.current))
     }, [])
 
     useEffect(() => {
