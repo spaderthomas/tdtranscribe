@@ -343,6 +343,29 @@ var WaveSurfer = {
         this.fireEvent('zoom', pxPerSec);
     },
 
+    zoomOnRegion: function (region, elementWidth) {
+        let start = region.start
+        let end = region.end
+        let regionLength = end - start
+
+        let pxPerSec = elementWidth / regionLength
+
+        this.params.minPxPerSec = pxPerSec;
+
+        this.params.scrollParent = true;
+
+        this.drawBuffer();
+        this.drawer.progress(this.backend.getPlayedPercents());
+
+        this.drawer.recenter(
+            (start + (regionLength / 2) ) / this.getDuration()
+        );
+        this.fireEvent('zoom', pxPerSec);
+
+        return pxPerSec
+    },
+
+
     /**
      * Internal method.
      */
@@ -1667,10 +1690,10 @@ WaveSurfer.Drawer = {
         if (pos < this.lastPos || pos - this.lastPos >= minPxDelta) {
             this.lastPos = pos;
 
-            if (this.params.scrollParent && this.params.autoCenter) {
-                var newPos = ~~(this.wrapper.scrollWidth * progress);
-                this.recenterOnPosition(newPos);
-            }
+            // if (this.params.scrollParent && this.params.autoCenter) {
+            //     var newPos = ~~(this.wrapper.scrollWidth * progress);
+            //     this.recenterOnPosition(newPos);
+            // }
 
             this.updateProgress(pos);
         }
@@ -2400,6 +2423,7 @@ WaveSurfer.Region = {
         this.color = params.color || 'rgba(0, 0, 0, 0.1)';
         this.data = params.data || {};
         this.attributes = params.attributes || {};
+        this.selected = params.selected === undefined ? false : params.selected
 
         this.maxLength = params.maxLength;
         this.minLength = params.minLength;
@@ -2496,6 +2520,15 @@ WaveSurfer.Region = {
             height: '100%',
             top: '0px'
         });
+
+        if (this.selected) {
+            this.style(regionEl, { 
+                border: 'solid',
+                borderColor: 'red',
+                borderWidth: '2px',
+                borderRadius: '5px'
+            })
+        }
 
         /* Resize handles */
         if (this.resize) {

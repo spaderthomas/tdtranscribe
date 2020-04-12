@@ -12,19 +12,21 @@ import {
 
 import {
     addRegion,
-    setSelectedRegion,
+    setParentRegion,
     moveRegion,
     setRegionVisibility,
     showRootRegions,
     removeRegion,
-    initWavesurfer
+    initWavesurfer,
+    setRegionSelected
 } from '../../actions/Actions'
 
 import {
     useEventListener,
     useRegionListener,
     snapEpsilon,
-    removeWavesurferRegion
+    removeWavesurferRegion,
+    findRegion
 } from '../../Utils'
 
 
@@ -39,11 +41,11 @@ export default function Waveform() {
     const [width, setWidth] = useState(width);
     const [initialized, setInitialized] = useState(false)
     const waveformDivRef = useRef()
-    
+
     const dispatch = useDispatch()
-    
+
     const wavesurfer = useSelector(state => state.wavesurfer)
-    const selectedRegion = useSelector(state => state.selectedRegion)
+    const parentRegion = useSelector(state => state.parentRegion)
     const regions = useSelector(state => state.regions)
 
     const [dragging, setDragging] = useState(false)
@@ -52,8 +54,57 @@ export default function Waveform() {
     const [slop, setSlop] = useState()
     const [dragStart, setDragStart] = useState()
 
-    let onRegionClick = region => {
-        dispatch(setSelectedRegion(region.id))
+    useEffect(() => {
+        if (!wavesurfer) return
+
+        console.log('parent region hook:', parentRegion)
+        if (!parentRegion) {
+            for (let region of regions) {
+                if (!region.parent) {
+                    dispatch(setRegionVisibility(region.id, true))
+                } else {
+                    dispatch(setRegionVisibility(region.id, false))
+                    dispatch(setRegionSelected(region.id, false))
+                }
+            }
+
+            wavesurfer.zoom(0)
+            setZoom(0)
+            return
+        }
+
+        // Make everything invisible
+        for (let region of regions) {
+            dispatch(setRegionVisibility(region.id, false))
+            dispatch(setRegionSelected(region.id, false))
+        }
+
+        // Make all the children of this region visible
+        for (let child of parentRegion.children) {
+            dispatch(setRegionVisibility(child.id, true))
+        }
+
+        // If it has children, default the first one to be selected
+        if (parentRegion.children.length > 0) {
+            let firstChild = parentRegion.children[0]
+            dispatch(setRegionSelected(firstChild.id, true))
+        }
+
+        let newZoom = wavesurfer.zoomOnRegion(parentRegion, width)
+        setZoom(newZoom)
+    }, [parentRegion])
+
+    let onRegionClick = wsRegion => {
+        let region = findRegion(regions, wsRegion.id)
+
+        // Seek to the beginning and zoom in
+        let floatStart = region.start / wavesurfer.getDuration()
+        wavesurfer.seekTo(floatStart)
+
+        let newZoom = wavesurfer.zoomOnRegion(region, width)
+        setZoom(newZoom)
+
+        dispatch(setParentRegion(region.id))
     }
 
     let onRegionMove = region => {
@@ -73,11 +124,21 @@ export default function Waveform() {
     useEffect(() => {
         if (!wavesurfer) return
 
+        // for (let region of regions) {
+        //     if (!region.isVisible) {
+        //         removeWavesurferRegion(wavesurfer, region.id)
+        //     }
+        //     if (region.isVisible && !(region.id in wavesurfer.regions.list)) {
+        //         region.suppressFire = true
+        //         let wsRegion = wavesurfer.regions.add(region)
+        //         setRegionCallbacks(wsRegion)
+        //     }
+        // }
+
         for (let region of regions) {
-            if (!region.isVisible) {
-                removeWavesurferRegion(wavesurfer, region.id)
-            }
-            if (region.isVisible && !(region.id in wavesurfer.regions.list)) {
+            removeWavesurferRegion(wavesurfer, region.id)
+
+            if (region.isVisible) {
                 region.suppressFire = true
                 let wsRegion = wavesurfer.regions.add(region)
                 setRegionCallbacks(wsRegion)
@@ -90,27 +151,15 @@ export default function Waveform() {
 
     }, [regions])
 
-    useEffect(() => {
-        if (!selectedRegion) return
-
-        let seconds = selectedRegion.end - selectedRegion.start
-        let center = (selectedRegion.end + selectedRegion.start) / 2
-        let floatCenter = center / wavesurfer.getDuration()
-
-        wavesurfer.seekTo(floatCenter)
-        setZoom(width / seconds)
-    }, [selectedRegion])
-
-    useEffect(() => {
-        if (!wavesurfer) return
-
-        wavesurfer.zoom(zoom)
-    }, [zoom])
-
     // utilities
     let onSpace = event => {
         if (event.key != ' ') return
-        wavesurfer.play(0, wavesurfer.getDuration())
+
+        if (parentRegion) {
+            wavesurfer.play(parentRegion.start, parentRegion.end)
+        } else {
+            wavesurfer.play(0, wavesurfer.getDuration())
+        }
     }
     let onP = event => {
         if (event.key != 'p') return
@@ -127,11 +176,47 @@ export default function Waveform() {
         setDraggingRegion(null)
         setDragStart(-1)
     }
+    let onArrowKey = event => {
+        switch (event.key) {
+            case 'ArrowRight': {
+
+            }
+            case 'ArrowLeft': {
+
+            }
+            case 'ArrowUp': {
+
+            }
+            case 'ArrowDown': {
+                console.log('arrowdown:', parentRegion)
+                if (!parentRegion) return
+                if (parentRegion.parent) {
+                    dispatch(setParentRegion(parentRegion.parent.id))
+                    
+                } else {
+                    dispatch(setParentRegion(null))
+                }
+
+
+            }
+            default: {
+                return 
+            }
+        }
+    }
 
     useEventListener('keydown', onSpace)
     useEventListener('keydown', onP)
     useEventListener('keydown', onEscape)
+    useEventListener('keydown', onArrowKey)
 
+    let onScroll = (event) => {
+        let scaled = event.deltaY / 50
+        let newZoom = Math.max(zoom - scaled, 0)
+        setZoom(newZoom)
+        wavesurfer.zoom(newZoom)
+    }
+    useEventListener('wheel', onScroll, waveformDivRef.current)
 
     let onWavesurferBeginDrag = event => {
         if (event.touches && event.touches.length > 1) { return }
@@ -179,7 +264,7 @@ export default function Waveform() {
         if (!dragging) { return; }
 
         let region = draggingRegion
-        if (!region) { 
+        if (!region) {
             region = wavesurfer.regions.add()
             setDraggingRegion(region)
         }
@@ -198,15 +283,6 @@ export default function Waveform() {
     };
     useRegionListener('mousemove', onMoveMouse, wavesurfer)
 
-    let addScrollListener = () => {
-        waveformDivRef.current.addEventListener('wheel', async (event) => {
-            var scaled = event.deltaY / 50
-            setZoom(zoom => Math.max(zoom - scaled, 0))
-
-            dispatch(showRootRegions())
-            dispatch(setSelectedRegion(-1))
-        })
-    }
 
     useEffect(() => {
         dispatch(initWavesurfer(waveformDivRef.current))
@@ -215,14 +291,13 @@ export default function Waveform() {
     useEffect(() => {
         if (!wavesurfer) return
 
-        addScrollListener()
         wavesurfer.load(Kovo)
 
         wavesurfer.initRegions()
 
-        wavesurfer.on('play', progress => {
-            wavesurfer.drawer.recenter(progress)
-        })
+        // wavesurfer.on('play', progress => {
+        //     wavesurfer.drawer.recenter(progress)
+        // })
         wavesurfer.on('region-created', onRegionCreated)
 
         setInitialized(true)

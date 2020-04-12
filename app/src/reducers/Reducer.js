@@ -1,13 +1,14 @@
 import {
     ADD_REGION,
-    SET_SELECTED_REGION,
+    SET_PARENT_REGION,
     ADD_CHILD,
     MOVE_REGION,
     SET_REGION_VISIBILITY,
     SHOW_ROOT_REGIONS,
     UPDATE_DISPLAY_NAME,
     REMOVE_REGION,
-    INIT_WAVESURFER
+    INIT_WAVESURFER,
+    SET_REGION_SELECTED
 } from '../actions/Actions'
 
 import { pureArrayPush, findRegion, snapEpsilon, randomRGBA } from '../Utils'
@@ -16,7 +17,7 @@ import { WaveSurfer } from '../wavesurfer'
 
 const initialState = {
     regions: [],
-    selectedRegion: null,
+    parentRegion: null,
     wavesurfer: null
 }
 
@@ -27,10 +28,13 @@ export const rootReducer = (state = initialState, action) => {
             action.region.isVisible = true
             action.region.drag = false
             action.region.color = randomRGBA()
+            action.region.selected = false
+            action.region.parent = null
 
-            if (state.selectedRegion) {
+            if (state.parentRegion) {
                 action.region.root = false
-                state.selectedRegion.children.push(action.region)
+                state.parentRegion.children.push(action.region)
+                action.region.parent = state.parentRegion
             } else {
                 action.region.root = true
             }
@@ -39,23 +43,14 @@ export const rootReducer = (state = initialState, action) => {
                 ...state,
                 regions: pureArrayPush(state.regions, action.region)
             }
-        case SET_SELECTED_REGION: {
+        case SET_PARENT_REGION: {
             let regions = [...state.regions]
             let selected = findRegion(regions, action.id)
-            if (selected) {
-                for (let region of regions) {
-                    region.isVisible = false
-                }
-
-                for (let region of selected.children) {
-                    region.isVisible = true
-                }
-            }
 
             return {
                 ...state,
                 regions: regions,
-                selectedRegion: selected
+                parentRegion: selected
             }
     }
         case ADD_CHILD:
@@ -108,7 +103,7 @@ export const rootReducer = (state = initialState, action) => {
             return {
                 ...state,
                 regions: regions,
-                selectedRegion: null
+                parentRegion: null
             }
 
         }
@@ -150,6 +145,21 @@ export const rootReducer = (state = initialState, action) => {
                 wavesurfer: wavesurfer
             }
         } 
+        case SET_REGION_SELECTED: {
+            let regions = [...state.regions]
+            let region = findRegion(regions, action.id)
+            region.selected = action.selected
+
+            let wsRegion = state.wavesurfer.regions[action.id]
+            if (wsRegion) {
+                wsRegion.selected = true
+            }
+
+            return {
+                ...state,
+                regions: regions
+            }
+        }
         default:
             return state;
     }

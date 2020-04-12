@@ -1,5 +1,5 @@
 export const ADD_REGION = 'AddRegion'
-export const SET_SELECTED_REGION = 'SetSelectedRegion'
+export const SET_PARENT_REGION = 'SetParentRegion'
 export const ADD_CHILD = 'AddChild'
 export const MOVE_REGION = 'MoveRegion'
 export const SET_REGION_VISIBILITY = 'SetRegionVisibility'
@@ -7,6 +7,7 @@ export const SHOW_ROOT_REGIONS = 'ShowRootRegions'
 export const UPDATE_DISPLAY_NAME = 'UpdateDisplayName'
 export const REMOVE_REGION = 'RemoveRegion'
 export const INIT_WAVESURFER = 'InitWavesurfer'
+export const SET_REGION_SELECTED = 'SelectRegion'
 
 export const addRegion = (region) => {
     return {    
@@ -23,18 +24,10 @@ export const removeRegion = (id) => {
     }
 }
 
-export const setSelectedRegion = (id) => {
+export const setParentRegion = (id) => {
     return {
-        type: SET_SELECTED_REGION,
+        type: SET_PARENT_REGION,
         id: id
-    }
-}
-
-export const addToChildren = (parent, child) => {
-    return {
-        type: ADD_CHILD,
-        parent: parent,
-        child: child
     }
 }
 
@@ -73,5 +66,13 @@ export const initWavesurfer = (element) => {
     return {
         type: INIT_WAVESURFER,
         element: element
+    }
+}
+
+export const setRegionSelected = (id, selected) => {
+    return {
+        type: SET_REGION_SELECTED,
+        id: id,
+        selected: selected
     }
 }
