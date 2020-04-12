@@ -3,7 +3,6 @@ export const SET_PARENT_REGION = 'SetParentRegion'
 export const ADD_CHILD = 'AddChild'
 export const MOVE_REGION = 'MoveRegion'
 export const SET_REGION_VISIBILITY = 'SetRegionVisibility'
-export const SHOW_ROOT_REGIONS = 'ShowRootRegions'
 export const UPDATE_DISPLAY_NAME = 'UpdateDisplayName'
 export const REMOVE_REGION = 'RemoveRegion'
 export const INIT_WAVESURFER = 'InitWavesurfer'
@@ -15,7 +14,6 @@ export const addRegion = (region) => {
         region: region
     }
 }
-
 
 export const removeRegion = (id) => {
     return {    
@@ -45,12 +43,6 @@ export const setRegionVisibility = (id, isVisible) => {
         type: SET_REGION_VISIBILITY,
         id: id,
         isVisible: isVisible
-    }
-}
-
-export const showRootRegions = () => {
-    return {
-        type: SHOW_ROOT_REGIONS
     }
 }
 

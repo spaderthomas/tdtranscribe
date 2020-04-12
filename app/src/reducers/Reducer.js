@@ -4,7 +4,6 @@ import {
     ADD_CHILD,
     MOVE_REGION,
     SET_REGION_VISIBILITY,
-    SHOW_ROOT_REGIONS,
     UPDATE_DISPLAY_NAME,
     REMOVE_REGION,
     INIT_WAVESURFER,
@@ -93,19 +92,6 @@ export const rootReducer = (state = initialState, action) => {
                 ...state,
                 regions: regions
             }
-        }
-        case SHOW_ROOT_REGIONS: {
-            let regions = [...state.regions]
-            for (let region of regions) {
-                region.isVisible = region.root
-            }
-
-            return {
-                ...state,
-                regions: regions,
-                parentRegion: null
-            }
-
         }
         case UPDATE_DISPLAY_NAME: {
             let regions = [...state.regions]

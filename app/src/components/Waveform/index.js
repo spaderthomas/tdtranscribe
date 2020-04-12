@@ -15,7 +15,6 @@ import {
     setParentRegion,
     moveRegion,
     setRegionVisibility,
-    showRootRegions,
     removeRegion,
     initWavesurfer,
     setRegionSelected
@@ -39,7 +38,6 @@ import styles from './styles.css'
 export default function Waveform() {
     const [zoom, setZoom] = useState(0)
     const [width, setWidth] = useState(width);
-    const [initialized, setInitialized] = useState(false)
     const waveformDivRef = useRef()
 
     const dispatch = useDispatch()
@@ -107,33 +105,22 @@ export default function Waveform() {
         dispatch(setParentRegion(region.id))
     }
 
-    let onRegionMove = region => {
-        dispatch(moveRegion(region.id, region.start, region.end))
+    let onRegionMove = wsRegion => {
+        dispatch(moveRegion(wsRegion.id, wsRegion.start, wsRegion.end))
     }
 
-    let setRegionCallbacks = region => {
-        region.on('update', event => onRegionMove(region))
-        region.on('click', event => onRegionClick(region))
+    let setRegionCallbacks = wsRegion => {
+        wsRegion.on('update', event => onRegionMove(wsRegion))
+        wsRegion.on('click', event => onRegionClick(wsRegion))
     }
 
-    let onRegionCreated = region => {
-        setRegionCallbacks(region)
-        dispatch(addRegion(region))
+    let onRegionCreated = wsRegion => {
+        setRegionCallbacks(wsRegion)
+        dispatch(addRegion(wsRegion))
     }
 
     useEffect(() => {
         if (!wavesurfer) return
-
-        // for (let region of regions) {
-        //     if (!region.isVisible) {
-        //         removeWavesurferRegion(wavesurfer, region.id)
-        //     }
-        //     if (region.isVisible && !(region.id in wavesurfer.regions.list)) {
-        //         region.suppressFire = true
-        //         let wsRegion = wavesurfer.regions.add(region)
-        //         setRegionCallbacks(wsRegion)
-        //     }
-        // }
 
         for (let region of regions) {
             removeWavesurferRegion(wavesurfer, region.id)
@@ -185,10 +172,6 @@ export default function Waveform() {
 
             }
             case 'ArrowUp': {
-
-            }
-            case 'ArrowDown': {
-                console.log('arrowdown:', parentRegion)
                 if (!parentRegion) return
                 if (parentRegion.parent) {
                     dispatch(setParentRegion(parentRegion.parent.id))
@@ -196,8 +179,13 @@ export default function Waveform() {
                 } else {
                     dispatch(setParentRegion(null))
                 }
+            }
+            case 'ArrowDown': {
+                if (!parentRegion) return
+                if (parentRegion.children.length === 0) return
 
-
+                dispatch(setParentRegion(parentRegion.children[0].id))
+                dispatch(setRegionSelected(parentRegion.children[0].id, true))
             }
             default: {
                 return 
@@ -295,9 +283,6 @@ export default function Waveform() {
 
         wavesurfer.initRegions()
 
-        // wavesurfer.on('play', progress => {
-        //     wavesurfer.drawer.recenter(progress)
-        // })
         wavesurfer.on('region-created', onRegionCreated)
 
         setInitialized(true)
