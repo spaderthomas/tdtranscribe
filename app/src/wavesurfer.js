@@ -345,16 +345,17 @@ var WaveSurfer = {
 
     zoomOnRegion: function (start, end, elementWidth) {
         let length = end - start
-        let pxPerSec = elementWidth / length
+        let pxPerSec = elementWidth / length;
+        console.log('px:', pxPerSec)
 
-        this.params.minPxPerSec = pxPerSec;
+        this.params.minPxPerSec = pxPerSec
+        this.params.scrollParent = true
 
         this.drawBuffer();
         this.drawer.progress(this.backend.getPlayedPercents());
 
-        this.drawer.recenter(
-            (start + (length / 2) ) / this.getDuration()
-        );
+        let center = (start + (length / 2) ) / this.getDuration()
+        this.drawer.recenter(center);
         this.fireEvent('zoom', pxPerSec);
 
         return pxPerSec

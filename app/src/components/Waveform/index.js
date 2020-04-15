@@ -57,6 +57,7 @@ export default function Waveform() {
     const isWavesurferReady = () => {
         return wavesurfer && wavesurfer.ready
     }
+
     useEffect(() => {
         if (!isWavesurferReady()) return
         if (!parentRegion) return
@@ -78,22 +79,18 @@ export default function Waveform() {
             dispatch(setRegionSelected(firstChild.id, true))
         }
 
-        console.log('hook:', wavesurfer)
+        // Seek to the beginning and zoom in
+        let floatStart = parentRegion.start / wavesurfer.getDuration()
+        wavesurfer.seekTo(floatStart)
+        
+        console.log('start, end:', parentRegion.start, parentRegion.end)
         let newZoom = wavesurfer.zoomOnRegion(parentRegion.start, parentRegion.end, width)
+        // wavesurfer.zoom(100)
         setZoom(newZoom)
     }, [parentRegion])
 
     let onRegionClick = wsRegion => {
-        let region = findRegion(regions, wsRegion.id)
-
-        // Seek to the beginning and zoom in
-        let floatStart = region.start / wavesurfer.getDuration()
-        wavesurfer.seekTo(floatStart)
-
-        let newZoom = wavesurfer.zoomOnRegion(region, width)
-        setZoom(newZoom)
-
-        dispatch(setParentRegion(region.id))
+        dispatch(setParentRegion(wsRegion.id))
     }
 
     let onRegionMove = wsRegion => {
@@ -163,8 +160,6 @@ export default function Waveform() {
 
             }
             case 'ArrowUp': {
-                console.log('arrowup current', parentRegion.id)
-                console.log('arrowup next', parentRegion.parent.id)
                 if (parentRegion.parent) {
                     dispatch(setParentRegion(parentRegion.parent.id))
                 }
@@ -281,8 +276,8 @@ export default function Waveform() {
         rootRegion.end = wavesurfer.getDuration()
 
         wavesurfer.on('region-created', onRegionCreated)
+
         const onWavesurferReady = () => {
-            console.log("READY!", wavesurfer)
             wavesurfer.ready = true
             dispatch(addRegion(rootRegion))
             dispatch(setParentRegion(rootRegion.id))
