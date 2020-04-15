@@ -27,5 +27,9 @@ really cool shit:
 - turn a region into a musical flash card
 - spaced repetition
 
+- quickly record audio snippets.
+- integrate audio snippets with flash cards?
+- integrate with icloud?1 
+
 * done
 - press escape to cancel creating a region
