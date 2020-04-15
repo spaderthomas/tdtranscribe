@@ -34,6 +34,7 @@ import Kovo from '../../assets/kovo.wav'
 import Slider from '@material-ui/core/Slider'
 
 import styles from './styles.css'
+import { rootReducer } from '../../reducers/Reducer'
 
 export default function Waveform() {
     const [zoom, setZoom] = useState(0)
@@ -54,22 +55,7 @@ export default function Waveform() {
 
     useEffect(() => {
         if (!wavesurfer) return
-
-        console.log('parent region hook:', parentRegion)
-        if (!parentRegion) {
-            for (let region of regions) {
-                if (!region.parent) {
-                    dispatch(setRegionVisibility(region.id, true))
-                } else {
-                    dispatch(setRegionVisibility(region.id, false))
-                    dispatch(setRegionSelected(region.id, false))
-                }
-            }
-
-            wavesurfer.zoom(0)
-            setZoom(0)
-            return
-        }
+        if (!parentRegion) return
 
         // Make everything invisible
         for (let region of regions) {
@@ -88,8 +74,10 @@ export default function Waveform() {
             dispatch(setRegionSelected(firstChild.id, true))
         }
 
-        let newZoom = wavesurfer.zoomOnRegion(parentRegion, width)
-        setZoom(newZoom)
+        console.log('hook:', wavesurfer)
+        wavesurfer.zoom(0)
+        //let newZoom = wavesurfer.zoomOnRegion(parentRegion.start, parentRegion.end, width)
+        // setZoom(newZoom)
     }, [parentRegion])
 
     let onRegionClick = wsRegion => {
@@ -172,12 +160,10 @@ export default function Waveform() {
 
             }
             case 'ArrowUp': {
-                if (!parentRegion) return
+                console.log('arrowup current', parentRegion.id)
+                console.log('arrowup next', parentRegion.parent.id)
                 if (parentRegion.parent) {
                     dispatch(setParentRegion(parentRegion.parent.id))
-                    
-                } else {
-                    dispatch(setParentRegion(null))
                 }
             }
             case 'ArrowDown': {
@@ -283,9 +269,18 @@ export default function Waveform() {
 
         wavesurfer.initRegions()
 
-        wavesurfer.on('region-created', onRegionCreated)
+        // Create the root region before all the fun callbacks for when regions are added
+        let rootRegion = wavesurfer.regions.add()
+        removeWavesurferRegion(wavesurfer, rootRegion.id)
+        rootRegion.id = 'root'
+        rootRegion.isVisible = false
+        rootRegion.start = 0
+        rootRegion.end = wavesurfer.getDuration()
 
-        setInitialized(true)
+        dispatch(addRegion(rootRegion))
+        dispatch(setParentRegion(rootRegion.id))
+
+        wavesurfer.on('region-created', onRegionCreated)
     }, [wavesurfer])
 
     useLayoutEffect(() => {

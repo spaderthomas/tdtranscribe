@@ -343,22 +343,17 @@ var WaveSurfer = {
         this.fireEvent('zoom', pxPerSec);
     },
 
-    zoomOnRegion: function (region, elementWidth) {
-        let start = region.start
-        let end = region.end
-        let regionLength = end - start
-
-        let pxPerSec = elementWidth / regionLength
+    zoomOnRegion: function (start, end, elementWidth) {
+        let length = end - start
+        let pxPerSec = elementWidth / length
 
         this.params.minPxPerSec = pxPerSec;
-
-        this.params.scrollParent = true;
 
         this.drawBuffer();
         this.drawer.progress(this.backend.getPlayedPercents());
 
         this.drawer.recenter(
-            (start + (regionLength / 2) ) / this.getDuration()
+            (start + (length / 2) ) / this.getDuration()
         );
         this.fireEvent('zoom', pxPerSec);
 

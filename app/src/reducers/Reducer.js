@@ -24,31 +24,24 @@ export const rootReducer = (state = initialState, action) => {
     switch (action.type) {
         case ADD_REGION:
             action.region.children = []
-            action.region.isVisible = true
+            action.region.isVisible = action.region.isVisible === undefined ? true : action.region.isVisible
             action.region.drag = false
             action.region.color = randomRGBA()
             action.region.selected = false
             action.region.parent = null
 
-            if (state.parentRegion) {
-                action.region.root = false
-                state.parentRegion.children.push(action.region)
-                action.region.parent = state.parentRegion
-            } else {
-                action.region.root = true
-            }
+            action.region.parent = state.parentRegion
+
+            state.parentRegion && state.parentRegion.children.push(action.region)
 
             return {
                 ...state,
                 regions: pureArrayPush(state.regions, action.region)
             }
         case SET_PARENT_REGION: {
-            let regions = [...state.regions]
-            let selected = findRegion(regions, action.id)
-
+            let selected = findRegion(state.regions, action.id)
             return {
                 ...state,
-                regions: regions,
                 parentRegion: selected
             }
     }
