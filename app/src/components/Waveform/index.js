@@ -52,9 +52,13 @@ export default function Waveform() {
     const [pxMove, setPxMove] = useState()
     const [slop, setSlop] = useState()
     const [dragStart, setDragStart] = useState()
+    const [ready, setReady] = useState()
 
+    const isWavesurferReady = () => {
+        return wavesurfer && wavesurfer.ready
+    }
     useEffect(() => {
-        if (!wavesurfer) return
+        if (!isWavesurferReady()) return
         if (!parentRegion) return
 
         // Make everything invisible
@@ -75,9 +79,8 @@ export default function Waveform() {
         }
 
         console.log('hook:', wavesurfer)
-        wavesurfer.zoom(0)
-        //let newZoom = wavesurfer.zoomOnRegion(parentRegion.start, parentRegion.end, width)
-        // setZoom(newZoom)
+        let newZoom = wavesurfer.zoomOnRegion(parentRegion.start, parentRegion.end, width)
+        setZoom(newZoom)
     }, [parentRegion])
 
     let onRegionClick = wsRegion => {
@@ -108,7 +111,7 @@ export default function Waveform() {
     }
 
     useEffect(() => {
-        if (!wavesurfer) return
+        if (!isWavesurferReady()) return
 
         for (let region of regions) {
             removeWavesurferRegion(wavesurfer, region.id)
@@ -257,7 +260,6 @@ export default function Waveform() {
     };
     useRegionListener('mousemove', onMoveMouse, wavesurfer)
 
-
     useEffect(() => {
         dispatch(initWavesurfer(waveformDivRef.current))
     }, [])
@@ -266,6 +268,7 @@ export default function Waveform() {
         if (!wavesurfer) return
 
         wavesurfer.load(Kovo)
+        wavesurfer.ready = false
 
         wavesurfer.initRegions()
 
@@ -277,11 +280,16 @@ export default function Waveform() {
         rootRegion.start = 0
         rootRegion.end = wavesurfer.getDuration()
 
-        dispatch(addRegion(rootRegion))
-        dispatch(setParentRegion(rootRegion.id))
-
         wavesurfer.on('region-created', onRegionCreated)
+        const onWavesurferReady = () => {
+            console.log("READY!", wavesurfer)
+            wavesurfer.ready = true
+            dispatch(addRegion(rootRegion))
+            dispatch(setParentRegion(rootRegion.id))
+        }
+        wavesurfer.on('ready', onWavesurferReady)
     }, [wavesurfer])
+
 
     useLayoutEffect(() => {
         if (waveformDivRef.current) {
