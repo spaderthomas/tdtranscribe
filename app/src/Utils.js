@@ -124,7 +124,7 @@ export const useEventListener = (eventName, handler, element = document) => {
 			element.removeEventListener(eventName, eventHandler)
 		}
 		return cleanup
-	}, [element])
+	})
 }
 
 export const useRegionListener = (eventType, listener, wavesurfer) => {

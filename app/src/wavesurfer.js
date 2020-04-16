@@ -346,7 +346,6 @@ var WaveSurfer = {
     zoomOnRegion: function (start, end, elementWidth) {
         let length = end - start
         let pxPerSec = elementWidth / length;
-        console.log('px:', pxPerSec)
 
         this.params.minPxPerSec = pxPerSec
         this.params.scrollParent = true
@@ -2419,7 +2418,7 @@ WaveSurfer.Region = {
         this.color = params.color || 'rgba(0, 0, 0, 0.1)';
         this.data = params.data || {};
         this.attributes = params.attributes || {};
-        this.selected = params.selected === undefined ? false : params.selected
+        this.highlighted = params.highlighted === undefined ? false : params.highlighted
 
         this.maxLength = params.maxLength;
         this.minLength = params.minLength;
@@ -2519,7 +2518,7 @@ WaveSurfer.Region = {
             top: '0px'
         });
 
-        if (this.selected) {
+        if (this.highlighted) {
             this.style(regionEl, { 
                 border: 'solid',
                 borderColor: 'red',

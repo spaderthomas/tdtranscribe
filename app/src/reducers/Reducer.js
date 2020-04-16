@@ -26,8 +26,9 @@ export const rootReducer = (state = initialState, action) => {
             action.region.parent = null
 
 
-            state.parent && state.parentRegion.children.push(action.id)
-            state.parent && (action.region.parent = state.parent.id)
+            let parent = findRegion(state.regions, state.parent)
+            parent && parent.children.push(action.region.id)
+            parent && (action.region.parent = parent.id)
 
             return {
                 ...state,

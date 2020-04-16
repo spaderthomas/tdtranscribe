@@ -37,6 +37,9 @@ import Slider from '@material-ui/core/Slider'
 import styles from './styles.css'
 import { rootReducer } from '../../reducers/Reducer'
 
+const isRoot = (region) => {
+    return region.parent === null
+}
 
 export default function Waveform() {
     const [zoom, setZoom] = useState(0)
@@ -50,6 +53,7 @@ export default function Waveform() {
     const regions = useSelector(state => state.regions)
 
     const [visible, setVisible] = useState([]) 
+    const [highlighted, setHighlighted] = useState([])
     const [dragging, setDragging] = useState(false)
     const [draggingRegion, setDraggingRegion] = useState()
     const [pxMove, setPxMove] = useState()
@@ -65,7 +69,6 @@ export default function Waveform() {
     }
     
     const onRegionMove = wsRegion => {
-    
         dispatch(moveRegion(wsRegion.id, start, end))
     }
     
@@ -73,44 +76,13 @@ export default function Waveform() {
         wsRegion.on('update', event => onRegionMove(wsRegion))
         wsRegion.on('click', event => onRegionClick(wsRegion))
     }
-        
-
-    // useEffect(() => {
-    //     if (!isWavesurferReady()) return
-    //     if (!parentRegion) return
-
-    //     // // Make everything invisible
-    //     // for (let region of regions) {
-    //     //     dispatch(setRegionVisibility(region.id, false))
-    //     //     dispatch(setRegionSelected(region.id, false))
-    //     // }
-
-    //     // // Make all the children of this region visible
-    //     // for (let child of parentRegion.children) {
-    //     //     dispatch(setRegionVisibility(child.id, true))
-    //     // }
-
-    //     // // If it has children, default the first one to be selected
-    //     // if (parentRegion.children.length > 0) {
-    //     //     let firstChild = parentRegion.children[0]
-    //     //     dispatch(setRegionSelected(firstChild.id, true))
-    //     // }
-
-    //     // Seek to the beginning and zoom in
-    //     let floatStart = parentRegion.start / wavesurfer.getDuration()
-    //     wavesurfer.seekTo(floatStart)
-        
-    //     console.log('start, end:', parentRegion.start, parentRegion.end)
-    //     //let newZoom = wavesurfer.zoomOnRegion(parentRegion.start, parentRegion.end, width)
-    //     // wavesurfer.zoom(100)
-    //     setZoom(newZoom)
-    // }, [parent])
-
  
     useEffect(() =>{
         if (!parent) return
 
-        setVisible(parent.children.map(child => child.id))
+        let region = findRegion(regions, parent)
+        setVisible(region.children.map(child => child.id))
+        setHighlighted(region.children.map(child => child.id))
     }, [parent])
 
     useEffect(() => {
@@ -122,16 +94,17 @@ export default function Waveform() {
 
         for (let id of visible) {
             let region = findRegion(regions, id)
-            region.suppressFire = true
-            let wsRegion = wavesurfer.regions.add(region)
-            setRegionCallbacks(wsRegion)
+            setRegionCallbacks(wavesurfer.regions.add({
+                ...region,
+                highlighted: highlighted.includes(id)
+            }))
         }
 
         for (let region of regions) {
             region.updateRender()
         }
 
-    }, [regions])
+    }, [regions, visible, highlighted])
 
     // utilities
     let onSpace = event => {
@@ -156,31 +129,25 @@ export default function Waveform() {
 
         setDragging(false)
         setDraggingRegion(null)
-        setDragStart(-1)
     }
+
     let onArrowKey = event => {
-        switch (event.key) {
-            case 'ArrowRight': {
-
+        if (event.key === 'ArrowRight') {
+            let region = findRegion(regions, parent)
+            if (highlighted.length === 0 && region.children.length) {
+                let nextHighlighted = [...highlighted]
+                nextHighlighted.push(region.children[0])
+                setHighlighted(nextHighlighted)
             }
-            case 'ArrowLeft': {
-
-            }
-            case 'ArrowUp': {
-                if (parentRegion.parent) {
-                    dispatch(setParentRegion(parentRegion.parent.id))
-                }
-            }
-            case 'ArrowDown': {
-                if (!parentRegion) return
-                if (parentRegion.children.length === 0) return
-
-                dispatch(setParentRegion(parentRegion.children[0].id))
-                dispatch(setRegionSelected(parentRegion.children[0].id, true))
-            }
-            default: {
-                return 
-            }
+        }
+        else if (event.key === 'ArrowLeft') {
+            console.log('ArrowLeft')
+        }
+        else if (event.key === 'ArrowUp') {
+            console.log('ArrowLeft')
+        }
+        else if (event.key === 'ArrowDown') {
+            console.log('ArrowLeft')
         }
     }
 
@@ -198,8 +165,6 @@ export default function Waveform() {
     useEventListener('wheel', onScroll, waveformDivRef.current)
 
     let onWavesurferBeginDrag = event => {
-        if (event.touches && event.touches.length > 1) { return }
-
         // Check whether the click/tap is on the bottom-most DOM element
         // Effectively prevent clicks on the scrollbar from registering as
         // region creation.
@@ -242,7 +207,6 @@ export default function Waveform() {
     let onMoveMouse = e => {
         if (!dragging) { return; }
 
-        // Make the dragging region in here instead of on click so you don't make tiny length-0 regions on clicks
         let region = draggingRegion
         if (!region) {
             region = wavesurfer.regions.add()
@@ -266,12 +230,12 @@ export default function Waveform() {
         let end = Math.max(position * duration, dragStart * duration)
 
         for (let other of regions) {
-            if (other.id == region.id) { continue }
+            if (other.id === region.id) { continue }
 
-            if (Math.abs(other.start - region.end) < snapEpsilon) {
+            if (Math.abs(other.start - end) < snapEpsilon) {
                 end = other.start
             }
-            if (Math.abs(start - end) < snapEpsilon) {
+            if (Math.abs(start - other.end) < snapEpsilon) {
                 start = other.end
             }
         }
@@ -287,6 +251,11 @@ export default function Waveform() {
 
     const onWavesurferReady = () => {
         wavesurfer.ready = true
+        let root = wavesurfer.regions.add()
+        root.remove()
+        root.id = 'root'
+        dispatch(addRegion(root))
+        dispatch(setParentRegion(root.id))
     }
     useWavesurferHandler('ready', onWavesurferReady, wavesurfer)
 
