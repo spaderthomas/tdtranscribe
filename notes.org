@@ -33,3 +33,18 @@ really cool shit:
 
 * done
 - press escape to cancel creating a region
+* thoughts
+ok....this isn't working. spending WAY too much time just trying to wrestle this
+thing to work. what is the problem? it's not debuggable. and the random memory
+leaks...christ, the random memory leaks. 
+
+the problem with the effects and dependencies is that it's too easy to trigger
+an infinite loop.
+
+i would love it if the regions were NOT globals
+
+but shit needs to know about them. for example, the region viewer. a notes
+editor. 
+
+maybe i can separate out the stuff that only the waveform needs to know? get rid
+of a few render cycles like that?

@@ -2430,10 +2430,12 @@ WaveSurfer.Region = {
         this.onZoom = this.updateRender.bind(this);
         this.wavesurfer.on('zoom', this.onZoom);
 
-        let fire = params.suppressFire === undefined ? true : false
-        if (fire) {
-            this.wavesurfer.fireEvent('region-created', this);
-        }
+        this.wavesurfer.fireEvent('region-created', this);
+
+        // let fire = params.suppressFire === undefined ? true : false
+        // if (fire) {
+        //     this.wavesurfer.fireEvent('region-created', this);
+        // }
 
     },
 

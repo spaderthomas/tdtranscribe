@@ -136,6 +136,26 @@ export const useRegionListener = (eventType, listener, wavesurfer) => {
 	useEventListener(eventType, listener, wavesurfer.regions.wrapper)
 }
 
+export const useWavesurferHandler = (eventName, handler, wavesurfer) => {
+	const saved = useRef()
+
+	useEffect(() => {
+		saved.current = handler
+	}, [handler])
+
+	useEffect(() => {
+		if (!wavesurfer) return () => {}
+
+		let eventHandler = event => saved.current(event)
+
+		wavesurfer.on(eventName, eventHandler)
+
+		let cleanup = () => {
+			wavesurfer.un(eventName, eventHandler)
+		}
+		return cleanup
+	}, [wavesurfer])
+}
 export const removeWavesurferRegion = (wavesurfer, id) => {
 	let region = wavesurfer.regions.list[id]
 	if (region) region.remove()

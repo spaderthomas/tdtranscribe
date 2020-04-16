@@ -25,7 +25,8 @@ import {
     useRegionListener,
     snapEpsilon,
     removeWavesurferRegion,
-    findRegion
+    findRegion,
+    useWavesurferHandler
 } from '../../Utils'
 
 
@@ -36,6 +37,7 @@ import Slider from '@material-ui/core/Slider'
 import styles from './styles.css'
 import { rootReducer } from '../../reducers/Reducer'
 
+
 export default function Waveform() {
     const [zoom, setZoom] = useState(0)
     const [width, setWidth] = useState(width);
@@ -44,80 +46,104 @@ export default function Waveform() {
     const dispatch = useDispatch()
 
     const wavesurfer = useSelector(state => state.wavesurfer)
-    const parentRegion = useSelector(state => state.parentRegion)
+    const parent = useSelector(state => state.parent)
     const regions = useSelector(state => state.regions)
 
+    const [visible, setVisible] = useState([]) 
     const [dragging, setDragging] = useState(false)
     const [draggingRegion, setDraggingRegion] = useState()
     const [pxMove, setPxMove] = useState()
     const [slop, setSlop] = useState()
     const [dragStart, setDragStart] = useState()
-    const [ready, setReady] = useState()
 
     const isWavesurferReady = () => {
         return wavesurfer && wavesurfer.ready
     }
 
-    useEffect(() => {
-        if (!isWavesurferReady()) return
-        if (!parentRegion) return
-
-        // Make everything invisible
-        for (let region of regions) {
-            dispatch(setRegionVisibility(region.id, false))
-            dispatch(setRegionSelected(region.id, false))
-        }
-
-        // Make all the children of this region visible
-        for (let child of parentRegion.children) {
-            dispatch(setRegionVisibility(child.id, true))
-        }
-
-        // If it has children, default the first one to be selected
-        if (parentRegion.children.length > 0) {
-            let firstChild = parentRegion.children[0]
-            dispatch(setRegionSelected(firstChild.id, true))
-        }
-
-        // Seek to the beginning and zoom in
-        let floatStart = parentRegion.start / wavesurfer.getDuration()
-        wavesurfer.seekTo(floatStart)
-        
-        console.log('start, end:', parentRegion.start, parentRegion.end)
-        let newZoom = wavesurfer.zoomOnRegion(parentRegion.start, parentRegion.end, width)
-        // wavesurfer.zoom(100)
-        setZoom(newZoom)
-    }, [parentRegion])
-
-    let onRegionClick = wsRegion => {
+    const onRegionClick = wsRegion => {
         dispatch(setParentRegion(wsRegion.id))
     }
+    
+    const onRegionMove = wsRegion => {
+        let region = findRegion(regions, wsRegion.id)
+    
+        let start = wsRegion.start
+        let end = wsRegion.end
 
-    let onRegionMove = wsRegion => {
-        dispatch(moveRegion(wsRegion.id, wsRegion.start, wsRegion.end))
+        for (let other of state.regions) {
+            if (other.id == region.id) { continue }
+
+            if (Math.abs(other.start - region.end) < snapEpsilon) {
+                end = other.start
+            }
+            if (Math.abs(region.start - other.end) < snapEpsilon) {
+                start = other.end
+            }
+        }
+    
+        dispatch(moveRegion(wsRegion.id, start, end))
     }
-
-    let setRegionCallbacks = wsRegion => {
+    
+    const setRegionCallbacks = wsRegion => {
         wsRegion.on('update', event => onRegionMove(wsRegion))
         wsRegion.on('click', event => onRegionClick(wsRegion))
     }
-
-    let onRegionCreated = wsRegion => {
+    
+    const onRegionCreated = wsRegion => {
         setRegionCallbacks(wsRegion)
-        dispatch(addRegion(wsRegion))
     }
+    
+
+    // useEffect(() => {
+    //     if (!isWavesurferReady()) return
+    //     if (!parentRegion) return
+
+    //     // // Make everything invisible
+    //     // for (let region of regions) {
+    //     //     dispatch(setRegionVisibility(region.id, false))
+    //     //     dispatch(setRegionSelected(region.id, false))
+    //     // }
+
+    //     // // Make all the children of this region visible
+    //     // for (let child of parentRegion.children) {
+    //     //     dispatch(setRegionVisibility(child.id, true))
+    //     // }
+
+    //     // // If it has children, default the first one to be selected
+    //     // if (parentRegion.children.length > 0) {
+    //     //     let firstChild = parentRegion.children[0]
+    //     //     dispatch(setRegionSelected(firstChild.id, true))
+    //     // }
+
+    //     // Seek to the beginning and zoom in
+    //     let floatStart = parentRegion.start / wavesurfer.getDuration()
+    //     wavesurfer.seekTo(floatStart)
+        
+    //     console.log('start, end:', parentRegion.start, parentRegion.end)
+    //     //let newZoom = wavesurfer.zoomOnRegion(parentRegion.start, parentRegion.end, width)
+    //     // wavesurfer.zoom(100)
+    //     setZoom(newZoom)
+    // }, [parent])
+
+ 
+    useEffect(() =>{
+        if (!parent) return
+
+        setVisible(parent.children.map(child => child.id))
+    }, [parent])
 
     useEffect(() => {
         if (!isWavesurferReady()) return
 
         for (let region of regions) {
             removeWavesurferRegion(wavesurfer, region.id)
+        }
 
-            if (region.isVisible) {
-                region.suppressFire = true
-                let wsRegion = wavesurfer.regions.add(region)
-                setRegionCallbacks(wsRegion)
-            }
+        for (let id of visible) {
+            let region = findRegion(regions, id)
+            region.suppressFire = true
+            let wsRegion = wavesurfer.regions.add(region)
+            setRegionCallbacks(wsRegion)
         }
 
         for (let region of regions) {
@@ -235,10 +261,16 @@ export default function Waveform() {
     let onMoveMouse = e => {
         if (!dragging) { return; }
 
+        // Make the dragging region in here instead of on click so you don't make tiny length-0 regions on clicks
         let region = draggingRegion
         if (!region) {
             region = wavesurfer.regions.add()
             setDraggingRegion(region)
+            dispatch(addRegion(region))
+
+            let nextVisible = [...visible]
+            nextVisible.push(region.id)
+            setVisible(nextVisible)
         }
 
         if (pxMove + 1 <= slop) {
@@ -259,30 +291,17 @@ export default function Waveform() {
         dispatch(initWavesurfer(waveformDivRef.current))
     }, [])
 
+
+    const onWavesurferReady = () => {
+        wavesurfer.ready = true
+    }
+    useWavesurferHandler('ready', onWavesurferReady, wavesurfer)
+    useWavesurferHandler('region-created', onRegionCreated, wavesurfer)
+
     useEffect(() => {
         if (!wavesurfer) return
 
         wavesurfer.load(Kovo)
-        wavesurfer.ready = false
-
-        wavesurfer.initRegions()
-
-        // Create the root region before all the fun callbacks for when regions are added
-        let rootRegion = wavesurfer.regions.add()
-        removeWavesurferRegion(wavesurfer, rootRegion.id)
-        rootRegion.id = 'root'
-        rootRegion.isVisible = false
-        rootRegion.start = 0
-        rootRegion.end = wavesurfer.getDuration()
-
-        wavesurfer.on('region-created', onRegionCreated)
-
-        const onWavesurferReady = () => {
-            wavesurfer.ready = true
-            dispatch(addRegion(rootRegion))
-            dispatch(setParentRegion(rootRegion.id))
-        }
-        wavesurfer.on('ready', onWavesurferReady)
     }, [wavesurfer])
 
 
