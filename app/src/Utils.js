@@ -141,9 +141,7 @@ export const useWavesurferHandler = (eventName, handler, wavesurfer) => {
 
 	useEffect(() => {
 		saved.current = handler
-	}, [handler])
 
-	useEffect(() => {
 		if (!wavesurfer) return () => {}
 
 		let eventHandler = event => saved.current(event)
@@ -154,6 +152,10 @@ export const useWavesurferHandler = (eventName, handler, wavesurfer) => {
 			wavesurfer.un(eventName, eventHandler)
 		}
 		return cleanup
+
+	}, [handler])
+
+	useEffect(() => {
 	}, [wavesurfer])
 }
 export const removeWavesurferRegion = (wavesurfer, id) => {

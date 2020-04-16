@@ -65,21 +65,6 @@ export default function Waveform() {
     }
     
     const onRegionMove = wsRegion => {
-        let region = findRegion(regions, wsRegion.id)
-    
-        let start = wsRegion.start
-        let end = wsRegion.end
-
-        for (let other of state.regions) {
-            if (other.id == region.id) { continue }
-
-            if (Math.abs(other.start - region.end) < snapEpsilon) {
-                end = other.start
-            }
-            if (Math.abs(region.start - other.end) < snapEpsilon) {
-                start = other.end
-            }
-        }
     
         dispatch(moveRegion(wsRegion.id, start, end))
     }
@@ -88,11 +73,7 @@ export default function Waveform() {
         wsRegion.on('update', event => onRegionMove(wsRegion))
         wsRegion.on('click', event => onRegionClick(wsRegion))
     }
-    
-    const onRegionCreated = wsRegion => {
-        setRegionCallbacks(wsRegion)
-    }
-    
+        
 
     // useEffect(() => {
     //     if (!isWavesurferReady()) return
@@ -278,12 +259,24 @@ export default function Waveform() {
             return;
         }
 
+        // Snap
         let duration = wavesurfer.getDuration()
         let position = wavesurfer.drawer.handleEvent(e)
-        region.update({
-            start: Math.min(position * duration, dragStart * duration),
-            end: Math.max(position * duration, dragStart * duration)
-        });
+        let start = Math.min(position * duration, dragStart * duration)
+        let end = Math.max(position * duration, dragStart * duration)
+
+        for (let other of regions) {
+            if (other.id == region.id) { continue }
+
+            if (Math.abs(other.start - region.end) < snapEpsilon) {
+                end = other.start
+            }
+            if (Math.abs(start - end) < snapEpsilon) {
+                start = other.end
+            }
+        }
+
+        dispatch(moveRegion(region.id, start, end))
     };
     useRegionListener('mousemove', onMoveMouse, wavesurfer)
 
@@ -296,7 +289,6 @@ export default function Waveform() {
         wavesurfer.ready = true
     }
     useWavesurferHandler('ready', onWavesurferReady, wavesurfer)
-    useWavesurferHandler('region-created', onRegionCreated, wavesurfer)
 
     useEffect(() => {
         if (!wavesurfer) return
