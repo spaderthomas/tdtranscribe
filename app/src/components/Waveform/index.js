@@ -14,10 +14,8 @@ import {
     addRegion,
     setParentRegion,
     moveRegion,
-    setRegionVisibility,
     removeRegion,
     initWavesurfer,
-    setRegionSelected
 } from '../../actions/Actions'
 
 import {
@@ -26,7 +24,8 @@ import {
     snapEpsilon,
     removeWavesurferRegion,
     findRegion,
-    useWavesurferHandler
+    useWavesurferHandler,
+    getRegionAfter
 } from '../../Utils'
 
 
@@ -134,8 +133,14 @@ export default function Waveform() {
     let onArrowKey = event => {
         if (event.key === 'ArrowRight') {
             let region = findRegion(regions, parent)
+
+            let nextHighlighted = [...highlighted]
             if (highlighted.length === 0 && region.children.length) {
-                let nextHighlighted = [...highlighted]
+                nextHighlighted.push(region.children[0])
+                setHighlighted(nextHighlighted)
+            }
+            else if (highlighted.length) {
+
                 nextHighlighted.push(region.children[0])
                 setHighlighted(nextHighlighted)
             }

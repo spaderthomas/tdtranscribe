@@ -162,3 +162,14 @@ export const removeWavesurferRegion = (wavesurfer, id) => {
 	let region = wavesurfer.regions.list[id]
 	if (region) region.remove()
 }
+
+export const getRegionAfter = (ids, id) => {
+	for (let i = 0; i < ids.length; i++) {
+		if (id == ids[i]) {
+			if (i === ids.length - 1) return null // end of list
+			return ids[i + 1]
+		}
+	}
+
+	return null
+}
