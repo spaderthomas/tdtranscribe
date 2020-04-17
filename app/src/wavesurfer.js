@@ -2523,7 +2523,6 @@ WaveSurfer.Region = {
                 border: 'solid',
                 borderColor: 'red',
                 borderWidth: '2px',
-                borderRadius: '5px'
             })
         }
 

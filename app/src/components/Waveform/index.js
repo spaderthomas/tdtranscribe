@@ -68,11 +68,13 @@ export default function Waveform() {
     }
 
     const onRegionClick = wsRegion => {
-        dispatch(setParentRegion(wsRegion.id))
+        console.log('UNIMPLEMENTED: onRegionClick()')
+        // dispatch(setParentRegion(wsRegion.id))
     }
     
     const onRegionMove = wsRegion => {
-        dispatch(moveRegion(wsRegion.id, start, end))
+        console.log('UNIMPLEMENTED: onRegionMove()')
+        //dispatch(moveRegion(wsRegion.id, wsRegion.start, wsRegion.end))
     }
     
     const setRegionCallbacks = wsRegion => {
@@ -83,14 +85,15 @@ export default function Waveform() {
     useEffect(() =>{
         if (!parentId) return
 
-        let region = findRegion(regions, parentId)
-        setVisible(region.children.map(child => child.id))
-        setHighlighted(region.children.map(child => child.id))
-    }, [parent])
+        let parent = findRegion(regions, parentId)
+        setVisible([...parent.children])
+        setHighlighted([])
+    }, [parentId])
 
     useEffect(() => {
         if (!isWavesurferReady()) return
 
+        console.log('visible:', visible)
         if (parentId) {
             let parent = findRegion(regions, parentId)
             parent.children = sortRegionIds(regions, parent.children)
@@ -153,10 +156,13 @@ export default function Waveform() {
             nextHighlighted ?  setHighlighted([nextHighlighted]) : setHighlighted([])
         }
         else if (event.key === 'ArrowUp') {
-            console.log('ArrowLeft')
+            let parent = findRegion(regions, parentId)
+            parent.parent && dispatch(setParentRegion(parent.parent))
         }
         else if (event.key === 'ArrowDown') {
-           console.log('ArrowLeft')
+            if (highlighted.length != 1) return
+
+            dispatch(setParentRegion(highlighted[0]))
         }
     }
 

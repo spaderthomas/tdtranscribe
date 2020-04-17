@@ -20,7 +20,6 @@ const initialState = {
 export const rootReducer = (state = initialState, action) => {
     switch (action.type) {
         case ADD_REGION:
-
             let regions = pureArrayPush(state.regions, action.region)
 
             action.region.children = []
