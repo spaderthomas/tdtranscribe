@@ -25,7 +25,11 @@ import {
     removeWavesurferRegion,
     findRegion,
     useWavesurferHandler,
-    getRegionAfter
+    getRegionAfter,
+    sortChildren,
+    sortRegionIds,
+    getNextRegion,
+    getPreviousRegion
 } from '../../Utils'
 
 
@@ -48,7 +52,7 @@ export default function Waveform() {
     const dispatch = useDispatch()
 
     const wavesurfer = useSelector(state => state.wavesurfer)
-    const parent = useSelector(state => state.parent)
+    const parentId = useSelector(state => state.parent)
     const regions = useSelector(state => state.regions)
 
     const [visible, setVisible] = useState([]) 
@@ -77,15 +81,20 @@ export default function Waveform() {
     }
  
     useEffect(() =>{
-        if (!parent) return
+        if (!parentId) return
 
-        let region = findRegion(regions, parent)
+        let region = findRegion(regions, parentId)
         setVisible(region.children.map(child => child.id))
         setHighlighted(region.children.map(child => child.id))
     }, [parent])
 
     useEffect(() => {
         if (!isWavesurferReady()) return
+
+        if (parentId) {
+            let parent = findRegion(regions, parentId)
+            parent.children = sortRegionIds(regions, parent.children)
+        }
 
         for (let region of regions) {
             removeWavesurferRegion(wavesurfer, region.id)
@@ -132,27 +141,22 @@ export default function Waveform() {
 
     let onArrowKey = event => {
         if (event.key === 'ArrowRight') {
-            let region = findRegion(regions, parent)
+            let parent = findRegion(regions, parentId)
 
-            let nextHighlighted = [...highlighted]
-            if (highlighted.length === 0 && region.children.length) {
-                nextHighlighted.push(region.children[0])
-                setHighlighted(nextHighlighted)
-            }
-            else if (highlighted.length) {
-
-                nextHighlighted.push(region.children[0])
-                setHighlighted(nextHighlighted)
-            }
+            let nextHighlighted = getNextRegion(regions, highlighted, parent.children)
+            nextHighlighted ?  setHighlighted([nextHighlighted]) : setHighlighted([])
         }
         else if (event.key === 'ArrowLeft') {
-            console.log('ArrowLeft')
+            let parent = findRegion(regions, parentId)
+
+            let nextHighlighted = getPreviousRegion(regions, highlighted, parent.children)
+            nextHighlighted ?  setHighlighted([nextHighlighted]) : setHighlighted([])
         }
         else if (event.key === 'ArrowUp') {
             console.log('ArrowLeft')
         }
         else if (event.key === 'ArrowDown') {
-            console.log('ArrowLeft')
+           console.log('ArrowLeft')
         }
     }
 

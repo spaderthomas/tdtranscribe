@@ -163,13 +163,42 @@ export const removeWavesurferRegion = (wavesurfer, id) => {
 	if (region) region.remove()
 }
 
-export const getRegionAfter = (ids, id) => {
-	for (let i = 0; i < ids.length; i++) {
-		if (id == ids[i]) {
-			if (i === ids.length - 1) return null // end of list
-			return ids[i + 1]
-		}
+export const addChildRegion = (regions, parentId, childId) => {
+	let parent = findRegion(regions, parentId)
+}
+
+export const sortRegionIds = (regions, ids) => {
+	return ids.sort((idA, idB) => {
+		let a = findRegion(regions, idA)
+		let b = findRegion(regions, idB)
+		return a.start > b.start ? 1 : -1 
+	})
+}
+
+export const getNextRegion = (regions, highlighted, children) => {
+	if (!highlighted.length) {
+		return children.length ? children[0] : null
 	}
 
-	return null
+	let last = highlighted[highlighted.length - 1]
+	let index = children.findIndex(element => element === last)
+	if (index === -1 || index === children.length - 1) {
+		return last
+	} else {
+		return children[index + 1]
+	}
+}
+
+export const getPreviousRegion = (regions, highlighted, children) => {
+	if (!highlighted.length) {
+		return null
+	}
+
+	let first = highlighted[0]
+	let index = children.findIndex(element => element === first)
+	if (index <= 0) {
+		return first
+	} else {
+		return children[index - 1]
+	}
 }

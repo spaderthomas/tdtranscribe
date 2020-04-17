@@ -7,7 +7,7 @@ import {
     INIT_WAVESURFER,
 } from '../actions/Actions'
 
-import { pureArrayPush, findRegion, snapEpsilon, randomRGBA } from '../Utils'
+import { pureArrayPush, findRegion, snapEpsilon, randomRGBA, addChildRegion } from '../Utils'
 
 import { WaveSurfer } from '../wavesurfer'
 
@@ -20,19 +20,22 @@ const initialState = {
 export const rootReducer = (state = initialState, action) => {
     switch (action.type) {
         case ADD_REGION:
+
+            let regions = pureArrayPush(state.regions, action.region)
+
             action.region.children = []
             action.region.isVisible = action.region.isVisible === undefined ? true : action.region.isVisible
             action.region.color = randomRGBA()
             action.region.parent = null
 
 
-            let parent = findRegion(state.regions, state.parent)
+            let parent = findRegion(regions, state.parent)
             parent && parent.children.push(action.region.id)
             parent && (action.region.parent = parent.id)
 
             return {
                 ...state,
-                regions: pureArrayPush(state.regions, action.region)
+                regions: regions
             }
         case SET_PARENT_REGION: {
             return {
