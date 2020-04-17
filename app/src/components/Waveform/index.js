@@ -93,7 +93,6 @@ export default function Waveform() {
     useEffect(() => {
         if (!isWavesurferReady()) return
 
-        console.log('visible:', visible)
         if (parentId) {
             let parent = findRegion(regions, parentId)
             parent.children = sortRegionIds(regions, parent.children)
@@ -157,12 +156,19 @@ export default function Waveform() {
         }
         else if (event.key === 'ArrowUp') {
             let parent = findRegion(regions, parentId)
-            parent.parent && dispatch(setParentRegion(parent.parent))
+            let nextParent = findRegion(regions, parent.parent)
+            if (nextParent) {
+                wavesurfer.zoomOnRegion(nextParent.start, nextParent.end, width)
+                dispatch(setParentRegion(nextParent.id))
+            }
         }
         else if (event.key === 'ArrowDown') {
             if (highlighted.length != 1) return
 
-            dispatch(setParentRegion(highlighted[0]))
+            let nextParentId = highlighted[0]
+            let nextParent = findRegion(regions, nextParentId)
+            wavesurfer.zoomOnRegion(nextParent.start, nextParent.end, width)
+            dispatch(setParentRegion(nextParentId))
         }
     }
 
@@ -269,6 +275,8 @@ export default function Waveform() {
         let root = wavesurfer.regions.add()
         root.remove()
         root.id = 'root'
+        root.start = 0
+        root.end = wavesurfer.getDuration()
         dispatch(addRegion(root))
         dispatch(setParentRegion(root.id))
     }
