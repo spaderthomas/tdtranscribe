@@ -113,6 +113,7 @@ export default function Waveform() {
 
             let nextHighlighted = getNextRegion(regions, highlighted, parent.children)
             nextHighlighted ?  setHighlighted([nextHighlighted]) : setHighlighted([])
+            console.log(nextHighlighted)
         }
         else if (event.key === 'ArrowLeft') {
             event.preventDefault()
@@ -129,8 +130,6 @@ export default function Waveform() {
 
             if (nextParent) {
                 dispatch(setParentRegion(nextParent.id))
-                setVisible([...nextParent.children])
-                setHighlighted([])
             }
         }
         else if (event.key === 'ArrowDown') {
@@ -141,9 +140,6 @@ export default function Waveform() {
             let nextParent = findRegion(regions, nextParentId)
 
             dispatch(setParentRegion(nextParentId))
-            setVisible([...nextParent.children])
-            setHighlighted([])
-
         }
     }
     useEventListener('keydown', onSpace)
@@ -152,7 +148,6 @@ export default function Waveform() {
     useEventListener('keydown', onArrowKey)
 
     let onScroll = (event) => {
-        console.log('on scoll')
         let scaled = event.deltaY / 50
         let newZoom = Math.max(zoom - scaled, 0)
         setZoom(newZoom)
@@ -247,9 +242,6 @@ export default function Waveform() {
         if (!isWavesurferReady()) return
         if (!parentId) return
 
-        let parent = findRegion(regions, parentId)
-        parent.children = sortRegionIds(regions, parent.children)
-
         for (let region of regions) {
             removeWavesurferRegion(wavesurfer, region.id)
         }
@@ -265,8 +257,33 @@ export default function Waveform() {
         for (let region of regions) {
             region.updateRender()
         }
+    }, [visible])
 
-    }, [regions, visible, highlighted])
+    useEffect(() => {
+        if (!isWavesurferReady()) return
+
+        for (let id of visible) {
+            let wsRegion = wavesurfer.regions.list[id]
+            wsRegion.highlighted = highlighted.includes(id)
+            wsRegion.updateRender()
+        }
+    }, [highlighted])
+
+
+    useEffect(() => {
+        if (!isWavesurferReady()) return
+
+        for (let id of visible) {
+            let region = findRegion(regions, id)
+            let wsRegion = wavesurfer.regions.list[id]
+            wsRegion.start = region.start
+            wsRegion.end = region.end
+            wsRegion.updateRender()
+        }
+
+        let parent = findRegion(regions, parentId)
+        parent && sortRegionIds(regions, parent.children)
+    }, [regions])
 
     useEffect(() => {
         if (!wavesurfer) return
@@ -276,8 +293,10 @@ export default function Waveform() {
             removeWavesurferRegion(wavesurfer, region.id)
         }
 
-
         let parent = findRegion(regions, parentId)
+        setVisible([...parent.children])
+        setHighlighted([])
+
         let newZoom = wavesurfer.zoomOnRegion(parent.start, parent.end, width)
         setZoom(newZoom)
     }, [parentId])

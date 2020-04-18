@@ -48,3 +48,11 @@ editor.
 
 maybe i can separate out the stuff that only the waveform needs to know? get rid
 of a few render cycles like that?
+
+sort regions whenever start/end changes
+add only on drag
+update on start/end change, highlighted change, 
+
+2 times when you change what is visible:
+- parent changes
+- region is added

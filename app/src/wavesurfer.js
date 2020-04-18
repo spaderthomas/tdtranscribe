@@ -1628,7 +1628,6 @@ WaveSurfer.Drawer = {
 
         // if the cursor is currently visible...
         if (!immediate && -half <= offset && offset < half) {
-            console.log('TARGET limited by recenter rate')
             // we'll limit the "re-center" rate.
             var rate = 5;
             offset = Math.max(-rate, Math.min(rate, offset));
@@ -1637,8 +1636,6 @@ WaveSurfer.Drawer = {
 
         // limit target to valid range (0 to maxScroll)
         target = Math.max(0, Math.min(maxScroll, target));
-
-        console.log('width, left, target', this.wrapper.scrollWidth, this.wrapper.scrollLeft, target)
 
         // no use attempting to scroll if we're not moving
         if (target != scrollLeft) {
@@ -2639,6 +2636,18 @@ WaveSurfer.Region = {
         }
 
         if (this.element != null) {
+            if (this.highlighted) {
+                this.style(this.element, {
+                    border: 'solid',
+                    borderColor: 'red',
+                    borderWidth: '2px',
+                })
+            } else {
+                this.style(this.element, {
+                    border: 'none'
+                })
+            }
+    
             // Calculate the left and width values of the region such that
             // no gaps appear between regions.
             var left = Math.round(this.start / dur * width);
