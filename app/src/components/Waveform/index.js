@@ -81,42 +81,7 @@ export default function Waveform() {
         wsRegion.on('update', event => onRegionMove(wsRegion))
         wsRegion.on('click', event => onRegionClick(wsRegion))
     }
- 
-    useEffect(() =>{
-        if (!parentId) return
 
-        let parent = findRegion(regions, parentId)
-        setVisible([...parent.children])
-        setHighlighted([])
-    }, [parentId])
-
-    useEffect(() => {
-        if (!isWavesurferReady()) return
-
-        if (parentId) {
-            let parent = findRegion(regions, parentId)
-            parent.children = sortRegionIds(regions, parent.children)
-        }
-
-        for (let region of regions) {
-            removeWavesurferRegion(wavesurfer, region.id)
-        }
-
-        for (let id of visible) {
-            let region = findRegion(regions, id)
-            setRegionCallbacks(wavesurfer.regions.add({
-                ...region,
-                highlighted: highlighted.includes(id)
-            }))
-        }
-
-        for (let region of regions) {
-            region.updateRender()
-        }
-
-    }, [regions, visible, highlighted])
-
-    // utilities
     let onSpace = event => {
         if (event.key != ' ') return
 
@@ -143,41 +108,55 @@ export default function Waveform() {
 
     let onArrowKey = event => {
         if (event.key === 'ArrowRight') {
+            event.preventDefault()
             let parent = findRegion(regions, parentId)
 
             let nextHighlighted = getNextRegion(regions, highlighted, parent.children)
             nextHighlighted ?  setHighlighted([nextHighlighted]) : setHighlighted([])
         }
         else if (event.key === 'ArrowLeft') {
+            event.preventDefault()
             let parent = findRegion(regions, parentId)
 
             let nextHighlighted = getPreviousRegion(regions, highlighted, parent.children)
             nextHighlighted ?  setHighlighted([nextHighlighted]) : setHighlighted([])
         }
         else if (event.key === 'ArrowUp') {
+            event.preventDefault()
             let parent = findRegion(regions, parentId)
             let nextParent = findRegion(regions, parent.parent)
             if (nextParent) {
-                wavesurfer.zoomOnRegion(nextParent.start, nextParent.end, width)
+                console.log('ARROW_UP!')
+                let newZoom = wavesurfer.zoomOnRegion(nextParent.start, nextParent.end, width)
+                setZoom(newZoom)
                 dispatch(setParentRegion(nextParent.id))
+                setVisible([...nextParent.children])
+                setHighlighted([])
+        
             }
         }
         else if (event.key === 'ArrowDown') {
+            event.preventDefault()
             if (highlighted.length != 1) return
 
             let nextParentId = highlighted[0]
             let nextParent = findRegion(regions, nextParentId)
-            wavesurfer.zoomOnRegion(nextParent.start, nextParent.end, width)
+            console.log('ARROW_DOWN1')
+            let newZoom = wavesurfer.zoomOnRegion(nextParent.start, nextParent.end, width)
+            setZoom(newZoom)
             dispatch(setParentRegion(nextParentId))
+            setVisible([...nextParent.children])
+            setHighlighted([])
+    
         }
     }
-
     useEventListener('keydown', onSpace)
     useEventListener('keydown', onP)
     useEventListener('keydown', onEscape)
     useEventListener('keydown', onArrowKey)
 
     let onScroll = (event) => {
+        console.log('on scoll')
         let scaled = event.deltaY / 50
         let newZoom = Math.max(zoom - scaled, 0)
         setZoom(newZoom)
@@ -202,7 +181,6 @@ export default function Waveform() {
 
         if (!draggingRegion) { return }
 
-
         // Snap the region to the start/end if it's close enough
         let start = draggingRegion.start
         let end = draggingRegion.end
@@ -218,7 +196,7 @@ export default function Waveform() {
             end: end
         })
         draggingRegion.fireEvent('update-end', e);
-        wavesurfer.fireEvent('region-update-end', draggingRegion, e);
+        //wavesurfer.fireEvent('region-update-end', draggingRegion, e);
 
         setDraggingRegion(null)
     };
@@ -268,6 +246,33 @@ export default function Waveform() {
     useEffect(() => {
         dispatch(initWavesurfer(waveformDivRef.current))
     }, [])
+
+    useEffect(() => {
+        if (!isWavesurferReady()) return
+
+        if (parentId) {
+            let parent = findRegion(regions, parentId)
+            parent.children = sortRegionIds(regions, parent.children)
+        }
+
+        for (let region of regions) {
+            removeWavesurferRegion(wavesurfer, region.id)
+        }
+
+        for (let id of visible) {
+            let region = findRegion(regions, id)
+            setRegionCallbacks(wavesurfer.regions.add({
+                ...region,
+                highlighted: highlighted.includes(id)
+            }))
+        }
+
+        for (let region of regions) {
+            region.updateRender()
+        }
+
+    }, [regions, visible, highlighted])
+
 
 
     const onWavesurferReady = () => {

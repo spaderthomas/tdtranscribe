@@ -7,7 +7,7 @@ import {
     INIT_WAVESURFER,
 } from '../actions/Actions'
 
-import { pureArrayPush, findRegion, snapEpsilon, randomRGBA, addChildRegion } from '../Utils'
+import { pureArrayPush, findRegion, snapEpsilon, randomRGBA, addChild } from '../Utils'
 
 import { WaveSurfer } from '../wavesurfer'
 
@@ -29,7 +29,7 @@ export const rootReducer = (state = initialState, action) => {
 
 
             let parent = findRegion(regions, state.parent)
-            parent && parent.children.push(action.region.id)
+            parent && addChild(regions, parent, action.region.id)
             parent && (action.region.parent = parent.id)
 
             return {
@@ -84,7 +84,7 @@ export const rootReducer = (state = initialState, action) => {
         case INIT_WAVESURFER: {
             let wavesurfer = WaveSurfer.create({
                 container: action.element,
-                waveColor: 'blue'
+                waveColor: '#2cd1bb'
             })
             wavesurfer.ready = false
             wavesurfer.initRegions()
