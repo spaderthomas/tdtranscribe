@@ -2427,11 +2427,6 @@ WaveSurfer.Regions = {
         region.init(params, this.wavesurfer);
         this.list[region.id] = region;
 
-
-        region.on('remove', (function () {
-            delete this.list[region.id];
-        }).bind(this));
-
         return region;
     },
 
@@ -2528,6 +2523,10 @@ WaveSurfer.Region = {
 
     /* Remove a single region. */
     remove: function () {
+        // 4/18/2020 @spader: Yeah, so in vanilla WS the region gets removed by the 'remove' event firing,
+        // the region handling it at some point, then calling this. But that leaves the <div> in there while
+        // we're zooming, which fucks with the scrollWidth. In other words -- when I say delete, do it now.
+        delete this.wavesurfer.regions.list[this.id]
         if (this.element) {
             this.wrapper.removeChild(this.element);
             this.element = null;

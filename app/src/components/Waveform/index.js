@@ -123,16 +123,14 @@ export default function Waveform() {
         }
         else if (event.key === 'ArrowUp') {
             event.preventDefault()
+
             let parent = findRegion(regions, parentId)
             let nextParent = findRegion(regions, parent.parent)
+
             if (nextParent) {
-                console.log('ARROW_UP!')
-                let newZoom = wavesurfer.zoomOnRegion(nextParent.start, nextParent.end, width)
-                setZoom(newZoom)
                 dispatch(setParentRegion(nextParent.id))
                 setVisible([...nextParent.children])
                 setHighlighted([])
-        
             }
         }
         else if (event.key === 'ArrowDown') {
@@ -141,13 +139,11 @@ export default function Waveform() {
 
             let nextParentId = highlighted[0]
             let nextParent = findRegion(regions, nextParentId)
-            console.log('ARROW_DOWN1')
-            let newZoom = wavesurfer.zoomOnRegion(nextParent.start, nextParent.end, width)
-            setZoom(newZoom)
+
             dispatch(setParentRegion(nextParentId))
             setVisible([...nextParent.children])
             setHighlighted([])
-    
+
         }
     }
     useEventListener('keydown', onSpace)
@@ -249,11 +245,10 @@ export default function Waveform() {
 
     useEffect(() => {
         if (!isWavesurferReady()) return
+        if (!parentId) return
 
-        if (parentId) {
-            let parent = findRegion(regions, parentId)
-            parent.children = sortRegionIds(regions, parent.children)
-        }
+        let parent = findRegion(regions, parentId)
+        parent.children = sortRegionIds(regions, parent.children)
 
         for (let region of regions) {
             removeWavesurferRegion(wavesurfer, region.id)
@@ -273,7 +268,19 @@ export default function Waveform() {
 
     }, [regions, visible, highlighted])
 
+    useEffect(() => {
+        if (!wavesurfer) return
+        if (!parentId) return
 
+        for (let region of regions) {
+            removeWavesurferRegion(wavesurfer, region.id)
+        }
+
+
+        let parent = findRegion(regions, parentId)
+        let newZoom = wavesurfer.zoomOnRegion(parent.start, parent.end, width)
+        setZoom(newZoom)
+    }, [parentId])
 
     const onWavesurferReady = () => {
         wavesurfer.ready = true
