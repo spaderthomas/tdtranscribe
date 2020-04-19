@@ -204,6 +204,26 @@ export const getPreviousRegion = (regions, highlighted, children) => {
 	}
 }
 
+export const modifiers = {
+	'Control': false,
+	'Alt': false,
+	'Shift': false
+}
+
+export const listenForModifierKeys = () => {
+	for (let [key, _] of Object.entries(modifiers)) {
+		document.addEventListener('keydown', event => {
+			if (event.key === key) {
+				modifiers[key] = true
+			}
+		})
+		document.addEventListener('keyup', event => {
+			if (event.key === key) {
+				modifiers[key] = false
+			}
+		})
+	}
+}
 
 function getCurvePoints(pts, tension, isClosed, numOfSegments) {
 

@@ -25,24 +25,16 @@ import {
     removeWavesurferRegion,
     findRegion,
     useWavesurferHandler,
-    getRegionAfter,
-    sortChildren,
     sortRegionIds,
     getNextRegion,
-    getPreviousRegion
+    getPreviousRegion,
+    modifiers
 } from '../../Utils'
 
 
 import Kovo from '../../assets/kovo.wav'
 
-import Slider from '@material-ui/core/Slider'
-
 import styles from './styles.css'
-import { rootReducer } from '../../reducers/Reducer'
-
-const isRoot = (region) => {
-    return region.parent === null
-}
 
 export default function Waveform() {
     const [zoom, setZoom] = useState(0)
@@ -57,10 +49,10 @@ export default function Waveform() {
 
     const [visible, setVisible] = useState([]) 
     const [highlighted, setHighlighted] = useState([])
+
     const [dragging, setDragging] = useState(false)
     const [draggingRegion, setDraggingRegion] = useState()
     const [pxMove, setPxMove] = useState()
-    const [slop, setSlop] = useState()
     const [dragStart, setDragStart] = useState()
 
     const isWavesurferReady = () => {
@@ -109,11 +101,21 @@ export default function Waveform() {
     let onArrowKey = event => {
         if (event.key === 'ArrowRight') {
             event.preventDefault()
-            let parent = findRegion(regions, parentId)
+            if (modifiers['Control']) {
+                let parent = findRegion(regions, parentId)
 
-            let nextHighlighted = getNextRegion(regions, highlighted, parent.children)
-            nextHighlighted ?  setHighlighted([nextHighlighted]) : setHighlighted([])
-            console.log(nextHighlighted)
+                let nextRegion = getNextRegion(regions, highlighted, parent.children)
+                if (!nextRegion) return
+
+                let nextHighlighted = [...highlighted]
+                nextHighlighted.push(nextRegion)
+                setHighlighted(nextHighlighted)
+            } else {
+                let parent = findRegion(regions, parentId)
+
+                let nextHighlighted = getNextRegion(regions, highlighted, parent.children)
+                nextHighlighted ?  setHighlighted([nextHighlighted]) : setHighlighted([])
+            }
         }
         else if (event.key === 'ArrowLeft') {
             event.preventDefault()
@@ -127,18 +129,13 @@ export default function Waveform() {
 
             let parent = findRegion(regions, parentId)
             let nextParent = findRegion(regions, parent.parent)
-
-            if (nextParent) {
-                dispatch(setParentRegion(nextParent.id))
-            }
+            nextParent && dispatch(setParentRegion(nextParent.id))
         }
         else if (event.key === 'ArrowDown') {
             event.preventDefault()
             if (highlighted.length != 1) return
 
             let nextParentId = highlighted[0]
-            let nextParent = findRegion(regions, nextParentId)
-
             dispatch(setParentRegion(nextParentId))
         }
     }
@@ -208,6 +205,7 @@ export default function Waveform() {
             setVisible(nextVisible)
         }
 
+        let slop = 0
         if (pxMove + 1 <= slop) {
             setPxMove(pxMove + 1)
             return;
@@ -289,10 +287,7 @@ export default function Waveform() {
         if (!wavesurfer) return
         if (!parentId) return
 
-        for (let region of regions) {
-            removeWavesurferRegion(wavesurfer, region.id)
-        }
-
+        // When the parent region changes, we only want to display its direct children. 
         let parent = findRegion(regions, parentId)
         setVisible([...parent.children])
         setHighlighted([])

@@ -11,6 +11,7 @@ import { store } from './Store'
 import Logo from './components/Logo/'
 import MainPage from './components/MainPage/'
 
+import { listenForModifierKeys } from './Utils'
 // Assets
 import VoidstarLogo from './assets/voidstar-logo.png'
 const logos = [
@@ -19,7 +20,8 @@ const logos = [
 
 
 export default function App() {
-
+    listenForModifierKeys()
+    
     const logosRender = logos.map((logo, index) => {
         return <Logo key={index} src={logo} />
     })
