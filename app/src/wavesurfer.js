@@ -152,6 +152,16 @@ var WaveSurfer = {
         this.backend.play(start, end);
     },
 
+    loop: function(start, end) {
+        this.play(start, this.getDuration())
+        this.on('audioprocess', time => {
+            if (time > end) {
+                console.log('loopin')
+                this.play(start)
+            }
+        })
+    },
+
     pause: function () {
         this.backend.isPaused() || this.backend.pause();
     },
