@@ -56,3 +56,9 @@ update on start/end change, highlighted change,
 2 times when you change what is visible:
 - parent changes
 - region is added
+* dogfood
+if you resize a region while it is playing the looping does not automatically adjust
+highlighting doesn't work on the edges
+zoomed in just a little bit on startup
+after dragging on mouse up region starts playing again
+audio pitch changes

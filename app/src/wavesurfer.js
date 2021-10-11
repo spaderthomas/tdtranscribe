@@ -156,7 +156,6 @@ var WaveSurfer = {
         this.play(start, this.getDuration())
         this.on('audioprocess', time => {
             if (time > end) {
-                console.log('loopin')
                 this.play(start)
             }
         })

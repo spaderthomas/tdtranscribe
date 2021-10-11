@@ -33,6 +33,8 @@ import {
 
 
 import Kovo from '../../assets/kovo.wav'
+import DarkStar from '../../assets/DarkStar.mp3'
+import Lovelight from '../../assets/lovelight-bickershaw.mp3'
 
 import styles from './styles.css'
 
@@ -65,8 +67,7 @@ export default function Waveform() {
     }
     
     const onRegionMove = wsRegion => {
-        console.log('UNIMPLEMENTED: onRegionMove()')
-        //dispatch(moveRegion(wsRegion.id, wsRegion.start, wsRegion.end))
+        dispatch(moveRegion(wsRegion.id, wsRegion.start, wsRegion.end))
     }
     
     const setRegionCallbacks = wsRegion => {
@@ -77,12 +78,14 @@ export default function Waveform() {
     let onSpace = event => {
         if (event.key != ' ') return
 
-        console.log(highlighted)
-        let parent = findRegion(regions, parentId)
-        let firstHighlighted = findRegion(regions, highlighted[0])
-        let lastHighlighted = findRegion(regions, highlighted[highlighted.length - 1])
-        wavesurfer.loop(firstHighlighted.start, lastHighlighted.end)
-        
+        if (!highlighted.length) {
+            wavesurfer.playPause()
+        } else {
+            wavesurfer.looping = true
+
+            let firstHighlighted = findRegion(regions, highlighted[0])
+            wavesurfer.play(firstHighlighted.start)
+        }
     }
     let onP = event => {
         if (event.key != 'p') return
@@ -126,6 +129,7 @@ export default function Waveform() {
 
                 let prevRegionId = getPreviousRegion(regions, highlighted, parent.children)
                 if (!prevRegionId) return
+                if (highlighted.includes(prevRegionId)) return
 
                 let nextHighlighted = [...highlighted]
                 nextHighlighted.push(prevRegionId)
@@ -278,6 +282,8 @@ export default function Waveform() {
             wsRegion.highlighted = highlighted.includes(id)
             wsRegion.updateRender()
         }
+
+        wavesurfer.loopRegionIds = highlighted
     }, [highlighted])
 
 
@@ -332,9 +338,24 @@ export default function Waveform() {
     useEffect(() => {
         if (!wavesurfer) return
 
-        wavesurfer.load(Kovo)
+        wavesurfer.load(Lovelight)
+        wavesurfer.drawer.wrapper.addEventListener('click', event => {
+            let progress = wavesurfer.drawer.handleEvent(event)
+            wavesurfer.seekTo(progress)
+        })
+        wavesurfer.looping = false
+        wavesurfer.loopRegionIds = []
     }, [wavesurfer])
 
+    const loop = time => {
+        if (!wavesurfer.looping || !wavesurfer.loopRegionIds.length) return
+
+        let firstLoopRegion = findRegion(regions, highlighted[0])
+        let lastLoopRegion = findRegion(regions, highlighted[highlighted.length - 1])
+
+        if (time > lastLoopRegion.end) wavesurfer.play(firstLoopRegion.start) 
+    }
+    useWavesurferHandler('audioprocess', loop, wavesurfer)
 
     useLayoutEffect(() => {
         if (waveformDivRef.current) {
